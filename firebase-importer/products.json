@@ -1,0 +1,152 @@
+[
+  {
+    "brandId": "Adidas",
+    "productname": "Adidas Ultraboost 22",
+    "productprice": "4500000",
+    "unitprice": "4500000",
+    "title": "Best Seller",
+    "description": "Giày chạy bộ hiệu suất cao với công nghệ đệm Boost trả lại năng lượng, mang lại sự êm ái vượt trội trên mọi cung đường.",
+    "imagelink": "https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/c60550c6c66942c695c5ad15008f877c_9366/Giay_Ultraboost_22_trang_GZ0124_01_standard.jpg",
+    "productId": "AD_UB22_001"
+  },
+  {
+    "brandId": "Adidas",
+    "productname": "Adidas Stan Smith",
+    "productprice": "2500000",
+    "unitprice": "2500000",
+    "title": "Classic",
+    "description": "Thiết kế biểu tượng vượt thời gian, chất liệu da cao cấp và 3 sọc đục lỗ đặc trưng. Phù hợp với mọi phong cách.",
+    "imagelink": "https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/43c56851f57f4d2a83e0ad8301375d65_9366/Giay_Stan_Smith_trang_FX5502_01_standard.jpg",
+    "productId": "AD_SS_002"
+  },
+  {
+    "brandId": "Adidas",
+    "productname": "Adidas NMD_R1",
+    "productprice": "3800000",
+    "unitprice": "3800000",
+    "title": "Street Style",
+    "description": "Kết hợp di sản thập niên 80 với công nghệ hiện đại. Thân giày bằng vải dệt kim mềm mại, đế giữa có đệm EVA đặc trưng.",
+    "imagelink": "https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/f44a170564d142269a92ad6900f07455_9366/Giay_NMD_R1_trang_GZ9255_01_standard.jpg",
+    "productId": "AD_NMD_003"
+  },
+  {
+    "brandId": "Nike",
+    "productname": "Nike Air Force 1 '07",
+    "productprice": "2900000",
+    "unitprice": "2900000",
+    "title": "Iconic",
+    "description": "Mẫu giày bóng rổ huyền thoại nay được làm mới. Thiết kế da trơn sắc sảo, đệm Nike Air mang lại sự thoải mái cả ngày.",
+    "imagelink": "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-force-1-07-shoes-Gj2pl0.png",
+    "productId": "NK_AF1_001"
+  },
+  {
+    "brandId": "Nike",
+    "productname": "Nike Pegasus 40",
+    "productprice": "3500000",
+    "unitprice": "3500000",
+    "title": "Running",
+    "description": "Giày chạy bộ đáng tin cậy. Công nghệ Nike React kết hợp với bộ đệm Zoom Air ở gót chân và mũi chân cho cảm giác đàn hồi, êm ái.",
+    "imagelink": "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/5c264cce-a7f4-4a6c-95b2-2c6b6c000f5c/pegasus-40-road-running-shoes-17wz5N.png",
+    "productId": "NK_PG40_002"
+  },
+  {
+    "brandId": "Nike",
+    "productname": "Nike Dunk Low Retro",
+    "productprice": "2900000",
+    "unitprice": "2900000",
+    "title": "Retro",
+    "description": "Biểu tượng bóng rổ thập niên 80 trở lại với thiết kế cổ thấp. Phối màu cổ điển và chất liệu da cao cấp.",
+    "imagelink": "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/f8f936b8-a1f1-41de-a3f2-e61e6f8c7b8f/dunk-low-retro-shoes-S0gwGB.png",
+    "productId": "NK_DL_003"
+  },
+  {
+    "brandId": "Puma",
+    "productname": "Puma Suede Classic XXI",
+    "productprice": "1999000",
+    "unitprice": "1999000",
+    "title": "Vintage",
+    "description": "Một biểu tượng của Puma. Giày Suede Classic với chất liệu da lộn cao cấp, ra mắt từ năm 1968 và vẫn luôn hợp thời.",
+    "imagelink": "https://images.puma.com/image/upload/f_auto,q_auto,b_rgb:fafafa,w_750,h_750/global/374915/01/sv01/fnd/VNM/fmt/png/Giay-sneaker-Suede-Classic-XXI",
+    "productId": "PM_SD_001"
+  },
+  {
+    "brandId": "Puma",
+    "productname": "Puma RS-X Efekt",
+    "productprice": "2800000",
+    "unitprice": "2800000",
+    "title": "Chunky",
+    "description": "Dòng RS (Running System) được làm mới với thiết kế chunky hầm hố. Đệm RS êm ái, phối màu độc đáo, đậm chất retro-futuristic.",
+    "imagelink": "https://images.puma.com/image/upload/f_auto,q_auto,b_rgb:fafafa,w_750,h_750/global/392770/02/sv01/fnd/VNM/fmt/png/Giay-sneaker-RS-X-Efekt-Premium",
+    "productId": "PM_RSX_002"
+  },
+  {
+    "brandId": "Puma",
+    "productname": "Puma CA Pro Classic",
+    "productprice": "2450000",
+    "unitprice": "2450000",
+    "title": "New Arrival",
+    "description": "Lấy cảm hứng từ phong cách California cổ điển. Thiết kế đơn giản nhưng tinh tế, đế giày cao su dày dặn, dễ dàng phối đồ.",
+    "imagelink": "https://images.puma.com/image/upload/f_auto,q_auto,b_rgb:fafafa,w_750,h_750/global/380190/01/sv01/fnd/VNM/fmt/png/Giay-sneaker-CA-Pro-Classic",
+    "productId": "PM_CAP_003"
+  },
+  {
+    "brandId": "Under Armour",
+    "productname": "UA HOVR Phantom 3",
+    "productprice": "3799000",
+    "unitprice": "3799000",
+    "title": "Running",
+    "description": "Công nghệ đệm UA HOVR™ cho cảm giác 'không trọng lực'. Có thể kết nối với UA MapMyRun™ để theo dõi chỉ số chạy bộ.",
+    "imagelink": "https://underarmour.scene7.com/is/image/UAFG/3025516-001_DEFAULT?rp=standard-10wp&scl=1&fmt=jpg&qlt=85&v=1658421865",
+    "productId": "UA_HVP3_001"
+  },
+  {
+    "brandId": "Under Armour",
+    "productname": "UA Curry 10",
+    "productprice": "4199000",
+    "unitprice": "4199000",
+    "title": "Basketball",
+    "description": "Dòng giày bóng rổ đặc trưng của Stephen Curry. Công nghệ đế UA Flow siêu nhẹ, bám sàn tốt và tăng cường tốc độ.",
+    "imagelink": "https://underarmour.scene7.com/is/image/UAFG/3025623-400_DEFAULT?rp=standard-10wp&scl=1&fmt=jpg&qlt=85&v=1664402660",
+    "productId": "UA_C10_002"
+  },
+  {
+    "brandId": "Under Armour",
+    "productname": "UA Charged Assert 9",
+    "productprice": "2099000",
+    "unitprice": "2099000",
+    "title": "Training",
+    "description": "Giày tập luyện đa dụng. Đệm Charged Cushioning® êm ái, bảo vệ chân. Thân giày bằng lưới thoáng khí, trọng lượng nhẹ.",
+    "imagelink": "https://underarmour.scene7.com/is/image/UAFG/3024590-001_DEFAULT?rp=standard-10wp&scl=1&fmt=jpg&qlt=85&v=1646761007",
+    "productId": "UA_CA9_003"
+  },
+  {
+    "brandId": "Converse",
+    "productname": "Converse Chuck 70 Classic",
+    "productprice": "1800000",
+    "unitprice": "1800000",
+    "title": "Iconic",
+    "description": "Phiên bản nâng cấp của Chuck Taylor cổ điển. Sử dụng chất liệu canvas cao cấp dày dặn hơn, đế giày bóng hơn và đệm lót êm ái hơn.",
+    "imagelink": "https://product.hstatic.net/1000284009/product/162050c_162050c-1__1__0a4f5f84d09249658a5629cffe7a4f7e_large.jpg",
+    "productId": "CV_C70_001"
+  },
+  {
+    "brandId": "Converse",
+    "productname": "Converse Chuck Taylor All Star Classic",
+    "productprice": "1500000",
+    "unitprice": "1500000",
+    "title": "Classic",
+    "description": "Thiết kế nguyên bản vượt thời gian, là mẫu giày sneaker phổ biến nhất thế giới. Kiểu dáng cổ cao (High Top) với logo tròn đặc trưng.",
+    "imagelink": "https://product.hstatic.net/1000284009/product/m9160c_m9160c-1__1__d6e6b1d0639d489b8cb21424a5f6e812_large.jpg",
+    "productId": "CV_CAS_002"
+  },
+  {
+    "brandId": "Converse",
+    "productname": "Converse Run Star Hike",
+    "productprice": "2700000",
+    "unitprice": "2700000",
+    "title": "Chunky",
+    "description": "Một thiết kế phá cách, kết hợp thân giày Chuck 70 cổ điển với bộ đế chunky platform hầm hố và chi tiết răng cưa nổi bật.",
+    "imagelink": "https://product.hstatic.net/1000284009/product/166800c_166800c-1__1__5b556f8f1c244c9b98c5f59bd82fc2d3_large.jpg",
+    "productId": "CV_RSH_003"
+  }
+]
