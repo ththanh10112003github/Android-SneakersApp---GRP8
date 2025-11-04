@@ -92,7 +92,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       "unitprice": priceController.text,
       "description": descController.text,
       "imagelink": selectedImageUrl,
-      "title": "Best Seller"
+      "title": "BÁN CHẠY"
     };
 
     FirebaseFirestore firestore = FirebaseFirestore.instance;

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ecommerce_app/respository/components/address_picker.dart';
 import 'package:ecommerce_app/respository/components/app_styles.dart';
 import 'package:ecommerce_app/respository/components/round_button.dart';
 import 'package:ecommerce_app/respository/components/route_names.dart';
@@ -23,12 +24,12 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
   var phone = '';
   var email = '';
   String address = '';
+  FullAddress? _currentAddress;
   PersistentShoppingCart cart = PersistentShoppingCart();
 
   final db = FirebaseFirestore.instance.collection('User Data');
   final TextEditingController phonecontroller = TextEditingController();
   final TextEditingController emailcontroller = TextEditingController();
-  final TextEditingController addresscontroller = TextEditingController();
 
   @override
   void initState() {
@@ -45,7 +46,19 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
         email = userdata['Email'];
       });
       phone = userdata['phone'];
-      address = userdata['address'] ?? '';
+      
+      // Load structured address if available
+      if (userdata['provinceCode'] != null || userdata['provinceName'] != null) {
+        _currentAddress = FullAddress.fromMap(userdata);
+        address = _currentAddress!.fullAddressString;
+      } else if (userdata['address'] != null && userdata['address'].toString().isNotEmpty) {
+        // Backward compatibility: use old string address
+        address = userdata['address'].toString();
+        _currentAddress = FullAddress.fromString(address);
+      } else {
+        address = '';
+        _currentAddress = FullAddress();
+      }
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -104,31 +117,35 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                       const SizedBox(
                         width: 17,
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            email,
-                            style: const TextStyle(
-                              fontFamily: 'Poppins-Medium',
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xff1A2530),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              email,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins-Medium',
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff1A2530),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          const Text(
-                            'Email',
-                            style: TextStyle(
-                              fontFamily: 'Poppins-Medium',
-                              fontSize: 12,
-                              color: Color(0xff707BB1),
+                            const SizedBox(
+                              height: 5,
                             ),
-                          )
-                        ],
+                            const Text(
+                              'Email',
+                              style: TextStyle(
+                                fontFamily: 'Poppins-Medium',
+                                fontSize: 12,
+                                color: Color(0xff707BB1),
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                       SizedBox(width: screenwidth * 0.01),
                       IconButton(
@@ -144,7 +161,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                                         child: Column(
                                           children: [
                                             const Text(
-                                              'Enter Your Email',
+                                              'Nhập địa chỉ email',
                                               style: TextStyle(
                                                 fontFamily: 'Raleway-Bold',
                                                 fontSize: 16,
@@ -161,7 +178,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                                                   TextInputType.emailAddress,
                                               controller: emailcontroller,
                                               decoration: InputDecoration(
-                                                  hintText: 'Enter Email',
+                                                  hintText: 'Nhập địa chỉ email của bạn',
                                                   hintStyle:
                                                       TextStyling.hinttext,
                                                   filled: true,
@@ -214,7 +231,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                                                             CircularProgressIndicator())
                                                     : const Center(
                                                         child: Text(
-                                                          'Submit',
+                                                          'Xác nhận',
                                                           style: TextStyle(
                                                               fontFamily:
                                                                   'Raleway-Bold',
@@ -230,7 +247,11 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                                   );
                                 });
                           },
-                          icon: Image.asset('images/edit.png'))
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: Color(0xff707BB1),
+                            size: 20,
+                          ))
                     ],
                   ),
                   const SizedBox(
@@ -242,30 +263,34 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                       const SizedBox(
                         width: 17,
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            phone,
-                            style: const TextStyle(
-                                fontFamily: 'Poppins-Medium',
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xff1A2530)),
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          const Text(
-                            'Phone',
-                            style: TextStyle(
-                              fontFamily: 'Poppins-Medium',
-                              fontSize: 12,
-                              color: Color(0xff707BB1),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              phone,
+                              style: const TextStyle(
+                                  fontFamily: 'Poppins-Medium',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xff1A2530)),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
-                          )
-                        ],
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            const Text(
+                              'Phone',
+                              style: TextStyle(
+                                fontFamily: 'Poppins-Medium',
+                                fontSize: 12,
+                                color: Color(0xff707BB1),
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                       SizedBox(width: screenwidth * 0.14),
                       IconButton(
@@ -344,7 +369,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                                                       AppColor.backgroundColor),
                                               child: const Center(
                                                 child: Text(
-                                                  'Submit',
+                                                  'Xác nhận',
                                                   style: TextStyle(
                                                       fontFamily:
                                                           'Raleway-Bold',
@@ -359,7 +384,11 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                                 );
                               });
                         },
-                        icon: Image.asset('images/edit.png'),
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          color: Color(0xff707BB1),
+                          size: 20,
+                        ),
                       )
                     ],
                   ),
@@ -371,130 +400,153 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                       const SizedBox(
                         width: 10,
                       ),
-                      Icon(Icons.location_on_outlined),
+                      const Icon(Icons.location_on_outlined),
                       const SizedBox(
                         width: 23,
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            address,
-                            style: const TextStyle(
-                              fontFamily: 'Poppins-Medium',
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xff1A2530),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              address,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins-Medium',
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff1A2530),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
                             ),
-                          ),
-                          const SizedBox(
-                            height: 5,
-                          ),
-                          const Text(
-                            'Địa chỉ',
-                            style: TextStyle(
-                              fontFamily: 'Poppins-Medium',
-                              fontSize: 12,
-                              color: Color(0xff707BB1),
+                            const SizedBox(
+                              height: 5,
                             ),
-                          )
-                        ],
+                            const Text(
+                              'Địa chỉ',
+                              style: TextStyle(
+                                fontFamily: 'Poppins-Medium',
+                                fontSize: 12,
+                                color: Color(0xff707BB1),
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                       SizedBox(width: screenwidth * 0.14),
                       IconButton(
                         onPressed: () {
+                          FullAddress? tempAddress = _currentAddress;
                           showDialog(
                               context: context,
                               builder: (BuildContext context) {
-                                return AlertDialog(
-                                  // ignore: sized_box_for_whitespace
-                                  content: Container(
-                                      height: 196,
-                                      width: 335,
-                                      child: Column(
-                                        children: [
-                                          const Text(
-                                            'Nhập số địa',
+                                return StatefulBuilder(
+                                  builder: (context, setDialogState) {
+                                    return AlertDialog(
+                                      title: const Text(
+                                        'Chỉnh sửa địa chỉ',
+                                        style: TextStyle(
+                                          fontFamily: 'Raleway-Bold',
+                                          fontSize: 18,
+                                          color: Color(0xff2B2B2B),
+                                        ),
+                                      ),
+                                      content: SizedBox(
+                                        width: double.maxFinite,
+                                        child: SingleChildScrollView(
+                                          child: AddressPicker(
+                                            initialAddress: tempAddress,
+                                            onAddressChanged: (address) {
+                                              setDialogState(() {
+                                                tempAddress = address;
+                                              });
+                                            },
+                                            detailAddressHint: 'Số nhà, tên đường...',
+                                          ),
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text(
+                                            'Hủy',
                                             style: TextStyle(
-                                              fontFamily: 'Raleway-Bold',
-                                              fontSize: 16,
-                                              color: Color(
-                                                0xff2B2B2B,
-                                              ),
+                                              fontFamily: 'Poppins-Medium',
+                                              fontSize: 14,
+                                              color: Color(0xff707B81),
                                             ),
                                           ),
-                                          const SizedBox(
-                                            height: 20,
-                                          ),
-                                          TextFormField(
-                                            keyboardType: TextInputType.phone,
-                                            controller: addresscontroller,
-                                            decoration: InputDecoration(
-                                              hintText: 'Nhận địa chỉ',
-                                              hintStyle: TextStyling.hinttext,
-                                              filled: true,
-                                              fillColor:
-                                                  const Color(0xffF7F7F9),
-                                              border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                  12,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            height: 20,
-                                          ),
-                                          InkWell(
-                                            onTap: () {
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            if (tempAddress != null) {
+                                              utils.showloading(true);
+                                              
+                                              // Prepare update data with structured address
+                                              final updateData = <String, dynamic>{};
+                                              final addressMap = tempAddress!.toMap();
+                                              updateData.addAll(addressMap);
+                                              // Also keep backward compatibility with 'address' field
+                                              updateData['address'] = tempAddress!.fullAddressString;
+                                              
                                               db
                                                   .doc(auth.currentUser!.uid)
-                                                  .update({
-                                                'address': addresscontroller
-                                                    .text
-                                                    .toString()
-                                              }).then((value) {
+                                                  .update(updateData)
+                                                  .then((value) {
+                                                utils.showloading(false);
                                                 GeneralUtils()
                                                     .showsuccessflushbar(
-                                                        'Address added',
+                                                        'Địa chỉ đã được cập nhật',
                                                         context);
                                                 fetchdata();
                                               }).onError((error, stackTrace) {
+                                                utils.showloading(false);
                                                 GeneralUtils()
                                                     .showerrorflushbar(
                                                         error.toString(),
                                                         context);
                                               });
                                               Navigator.pop(context);
-                                            },
-                                            child: Container(
-                                              height: 40,
-                                              width: 130,
-                                              decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  color:
-                                                      AppColor.backgroundColor),
-                                              child: const Center(
-                                                child: Text(
-                                                  'Submit',
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColor.backgroundColor,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          child: utils.load
+                                              ? const SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                  ),
+                                                )
+                                              : const Text(
+                                                  'Xác nhận',
                                                   style: TextStyle(
                                                     fontFamily: 'Raleway-Bold',
                                                     fontSize: 12,
                                                     color: Colors.white,
                                                   ),
                                                 ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      )),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 );
                               });
                         },
-                        icon: Image.asset('images/edit.png'),
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          color: Color(0xff707BB1),
+                          size: 20,
+                        ),
                       )
                     ],
                   ),
@@ -672,6 +724,8 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
         'email': email,
         'phone': phone,
         'address': address,
+        // Also save structured address if available
+        if (_currentAddress != null) ..._currentAddress!.toMap(),
         'totalPrice': cartData['totalPrice'] ?? 0,
         'items': items,
         'status': 'pending',

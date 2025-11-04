@@ -9,7 +9,7 @@ class ProductContainer extends StatelessWidget {
   final int quantity;
   const ProductContainer({
     super.key,
-    this.title = 'Best Seller',
+    this.title = 'BÁN CHẠY',
     required this.subtitle,
     required this.imagelink,
     required this.price,
@@ -153,7 +153,7 @@ class ShowProductContainer extends StatelessWidget {
 
   const ShowProductContainer(
       {super.key,
-      this.title = 'Best Seller',
+      this.title = 'BÁN CHẠY',
       required this.subtitle,
       required this.imagelink,
       required this.price,

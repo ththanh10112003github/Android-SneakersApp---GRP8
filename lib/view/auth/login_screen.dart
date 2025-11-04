@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Padding(
                 padding: EdgeInsets.only(top: screenheight * .02),
                 child: const Text(
-                  'Hello Again!',
+                  'Welcome Back!',
                   style: TextStyling.headingstyle,
                 ),
               ),

@@ -10,6 +10,7 @@ import 'package:ecommerce_app/view/home/notification_screen.dart';
 import 'package:ecommerce_app/view/home/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 class BottomNavigationBarScreen extends StatefulWidget {
@@ -56,21 +57,51 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
           buttonBackgroundColor: AppColor.backgroundColor,
           backgroundColor: const Color(0xffF7F7F9),
           items: [
-            Image(
-                image: const AssetImage('images/home.png'),
-                color: itemindex == 0 ? Colors.white : Colors.black),
-            Image(
-                image: const AssetImage('images/heart.png'),
-                color: itemindex == 1 ? Colors.white : Colors.black),
-            Image(
-                image: const AssetImage('images/cart.png'),
-                color: itemindex == 2 ? Colors.white : Colors.black),
-            Image(
-                image: const AssetImage('images/notification.png'),
-                color: itemindex == 3 ? Colors.white : Colors.black),
-            Image(
-                image: const AssetImage('images/profile.png'),
-                color: itemindex == 4 ? Colors.white : Colors.black),
+            SvgPicture.asset(
+                'images/home.svg',
+                colorFilter: ColorFilter.mode(
+                  itemindex == 0 ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                ),
+                width: 24,
+                height: 24,
+              ),
+            SvgPicture.asset(
+                'images/heart.svg',
+                colorFilter: ColorFilter.mode(
+                  itemindex == 1 ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                ),
+                width: 24,
+                height: 24,
+              ),
+            SvgPicture.asset(
+                'images/cart.svg',
+                colorFilter: ColorFilter.mode(
+                  itemindex == 2 ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                ),
+                width: 24,
+                height: 24,
+              ),
+            SvgPicture.asset(
+                'images/notification.svg',
+                colorFilter: ColorFilter.mode(
+                  itemindex == 3 ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                ),
+                width: 24,
+                height: 24,
+              ),
+            SvgPicture.asset(
+                'images/profile.svg',
+                colorFilter: ColorFilter.mode(
+                  itemindex == 4 ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                ),
+                width: 24,
+                height: 24,
+              ),
           ],
         ),
         drawer: SizedBox(
@@ -108,11 +139,17 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              userData['image'] == null
-                                  ? const CircleAvatar(
+                              userData['image'] == null || userData['image'].toString().isEmpty
+                                  ? CircleAvatar(
                                       radius: 96,
-                                      child: Icon(
-                                        Icons.person,
+                                      backgroundColor: Colors.transparent,
+                                      child: ClipOval(
+                                        child: SvgPicture.asset(
+                                          'images/default_profile.svg',
+                                          fit: BoxFit.cover,
+                                          width: 192,
+                                          height: 192,
+                                        ),
                                       ),
                                     )
                                   : CircleAvatar(
@@ -143,11 +180,14 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                   ),
                   ListTile(
                     textColor: const Color(0xffFFFFFF),
-                    leading: const Image(
-                      image: AssetImage(
-                        'images/profile.png',
+                    leading: SvgPicture.asset(
+                      'images/profile.svg',
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xffFFFFFF),
+                        BlendMode.srcIn,
                       ),
-                      color: Color(0xffFFFFFF),
+                      width: 24,
+                      height: 24,
                     ),
                     title: const Text('Profile'),
                     onTap: () {
@@ -157,11 +197,14 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                   //1
                   ListTile(
                     textColor: const Color(0xffFFFFFF),
-                    leading: const Image(
-                      image: AssetImage(
-                        'images/cart.png',
+                    leading: SvgPicture.asset(
+                      'images/cart.svg',
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xffFFFFFF),
+                        BlendMode.srcIn,
                       ),
-                      color: Color(0xffFFFFFF),
+                      width: 24,
+                      height: 24,
                     ),
                     title: const Text('My Cart'),
                     onTap: () {
@@ -171,11 +214,14 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                   //2
                   ListTile(
                     textColor: const Color(0xffFFFFFF),
-                    leading: const Image(
-                      image: AssetImage(
-                        'images/heart.png',
+                    leading: SvgPicture.asset(
+                      'images/heart.svg',
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xffFFFFFF),
+                        BlendMode.srcIn,
                       ),
-                      color: Color(0xffFFFFFF),
+                      width: 24,
+                      height: 24,
                     ),
                     title: const Text('Favourites'),
                     onTap: () {
@@ -199,11 +245,14 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                   //4
                   ListTile(
                     textColor: const Color(0xffFFFFFF),
-                    leading: const Image(
-                      image: AssetImage(
-                        'images/notification.png',
+                    leading: SvgPicture.asset(
+                      'images/notification.svg',
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xffFFFFFF),
+                        BlendMode.srcIn,
                       ),
-                      color: Color(0xffFFFFFF),
+                      width: 24,
+                      height: 24,
                     ),
                     title: const Text('Notifications'),
                     onTap: () {
@@ -225,11 +274,14 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                   //5
                   ListTile(
                     textColor: const Color(0xffFFFFFF),
-                    leading: const Image(
-                      image: AssetImage(
-                        'images/settings.png',
+                    leading: SvgPicture.asset(
+                      'images/settings.svg',
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xffFFFFFF),
+                        BlendMode.srcIn,
                       ),
-                      color: Color(0xffFFFFFF),
+                      width: 24,
+                      height: 24,
                     ),
                     title: const Text(
                       'Settings',

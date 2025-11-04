@@ -1,10 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ecommerce_app/respository/components/address_picker.dart';
 import 'package:ecommerce_app/respository/components/app_styles.dart';
 import 'package:ecommerce_app/respository/components/round_button.dart';
 import 'package:ecommerce_app/utils/general_utils.dart';
+import 'package:ecommerce_app/view/auth/change_password_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+
+// Constants for spacing and sizing
+class UpdateProfileConstants {
+  static const double avatarSize = 100.0;
+  static const double avatarSizeWithImage = 105.0;
+  static const double avatarBorderWidth = 3.0;
+  static const double topPadding = 16.0;
+  static const double horizontalPadding = 16.0;
+  static const double fieldSpacing = 16.0;
+  static const double labelSpacing = 8.0;
+  static const double buttonPadding = 16.0;
+  static const double bottomSpacing = 24.0;
+}
 
 class UpdateProfileScreen extends StatefulWidget {
   const UpdateProfileScreen({
@@ -24,26 +40,60 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   late TextEditingController emailcontroller;
   late TextEditingController nameController;
   late TextEditingController phoneController;
-  late TextEditingController addressController;
   final db = FirebaseFirestore.instance.collection("User Data");
   final id = FirebaseAuth.instance.currentUser!.uid;
+  
+  String? _userImage;
+  bool _isLoading = true;
+  FullAddress? _currentAddress;
 
   @override
   void initState() {
+    super.initState();
     emailcontroller = TextEditingController(text: widget.email);
     nameController = TextEditingController(text: widget.name);
     phoneController = TextEditingController();
-    addressController = TextEditingController();
     
-    db.doc(id).get().then((doc) {
-      if (doc.exists) {
+    _loadUserData();
+  }
+  
+  Future<void> _loadUserData() async {
+    try {
+      final doc = await db.doc(id).get();
+      if (doc.exists && mounted) {
         final data = doc.data() as Map<String, dynamic>;
-        phoneController.text = data['phone'];
-        addressController.text = data['address'];
+        setState(() {
+          phoneController.text = data['phone'] ?? '';
+          _userImage = data['image']?.toString();
+          
+          // Load structured address nếu có, nếu không thì load từ address string cũ
+          if (data['provinceCode'] != null || data['provinceName'] != null) {
+            _currentAddress = FullAddress.fromMap(data);
+          } else if (data['address'] != null && data['address'].toString().isNotEmpty) {
+            // Backward compatibility: convert old string address to FullAddress
+            _currentAddress = FullAddress.fromString(data['address'].toString());
+          } else {
+            _currentAddress = FullAddress();
+          }
+          
+          _isLoading = false;
+        });
+      } else {
+        if (mounted) {
+          setState(() {
+            _currentAddress = FullAddress();
+            _isLoading = false;
+          });
+        }
       }
-    });
-    
-    super.initState();
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -52,13 +102,123 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     emailcontroller.dispose();
     nameController.dispose();
     phoneController.dispose();
-    addressController.dispose();
+  }
+
+  Widget _buildFieldLabel(String label) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: UpdateProfileConstants.labelSpacing),
+        child: Text(
+          label,
+          style: TextStyling.formtextstyle,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormField({
+    required TextEditingController controller,
+    required IconData icon,
+    required String hintText,
+    TextInputType? keyboardType,
+    bool enabled = true,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xffF7F7F9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextFormField(
+        controller: controller,
+        enabled: enabled,
+        keyboardType: keyboardType,
+        style: TextStyle(
+          fontFamily: 'Poppins-Medium',
+          fontSize: 14,
+          color: enabled ? const Color(0xff2B2B2B) : const Color(0xff707B81),
+        ),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyling.hinttext,
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xff6A6A6A),
+            size: 20,
+          ),
+          suffixIcon: enabled
+              ? null
+              : const Icon(
+                  Icons.lock_outline,
+                  size: 16,
+                  color: Color(0xff6A6A6A),
+                ),
+          filled: true,
+          fillColor: const Color(0xffF7F7F9),
+          border: OutlineInputBorder(
+            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: AppColor.backgroundColor,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField({required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xffF7F7F9),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.lock_outline,
+              color: Color(0xff6A6A6A),
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Nhấn để đổi mật khẩu',
+                style: TextStyling.hinttext,
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Color(0xff6A6A6A),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    double screenheight = MediaQuery.of(context).size.height;
-    double screenwidth = MediaQuery.of(context).size.width;
     final utilsProvider = Provider.of<GeneralUtils>(context, listen: true);
 
     return Scaffold(
@@ -83,274 +243,260 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       ),
       drawer: null,
       endDrawer: null,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            StreamBuilder(
-                stream: db.doc(id).snapshots(),
-                builder: (BuildContext context,
-                    AsyncSnapshot<DocumentSnapshot> snapshot) {
-                  dynamic userData = snapshot.data?.data();
-
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                        child: CircularProgressIndicator(
-                      color: AppColor.backgroundColor,
-                    ));
-                  } else if (snapshot.hasError) {
-                    const Center(
-                      child: Text("Error Occured"),
-                    );
-                  }
-
-                  return Padding(
-                    padding: EdgeInsets.only(top: screenheight * 0.05),
-                    child: Column(
-                      children: [
-                        userData!['image'].toString().isEmpty
-                            ? Container(
-                                height: 100,
-                                width: 100,
-                                decoration: const BoxDecoration(
-                                  image: DecorationImage(
-                                      image: AssetImage(
-                                    'images/profile.png',
-                                  )),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
-                                  color: Colors.grey,
-                                ),
-                              )
-                            : Container(
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                ),
-                                height: 105,
-                                width: 105,
-                                child: ClipOval(
-                                  child: Image.network(
-                                    userData!['image'],
-                                    fit: BoxFit.cover,
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: AppColor.backgroundColor,
+              ),
+            )
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: UpdateProfileConstants.horizontalPadding,
+                ),
+                child: Column(
+                  children: [
+                  // StreamBuilder chỉ dùng cho avatar để cập nhật khi upload ảnh
+                  StreamBuilder<DocumentSnapshot>(
+                    stream: db.doc(id).snapshots(),
+                    builder: (context, snapshot) {
+                      String? currentImage;
+                      if (snapshot.hasData && snapshot.data!.exists) {
+                        final data = snapshot.data!.data() as Map<String, dynamic>;
+                        currentImage = data['image']?.toString();
+                      } else {
+                        currentImage = _userImage;
+                      }
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          top: UpdateProfileConstants.topPadding * 2,
+                        ),
+                        child: Column(
+                          children: [
+                            Center(
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppColor.backgroundColor,
+                                        width: UpdateProfileConstants.avatarBorderWidth,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: (currentImage == null || currentImage.isEmpty)
+                                        ? Container(
+                                            height: UpdateProfileConstants.avatarSizeWithImage,
+                                            width: UpdateProfileConstants.avatarSizeWithImage,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Color(0xffF7F7F9),
+                                            ),
+                                            child: ClipOval(
+                                              child: SvgPicture.asset(
+                                                'images/default_profile.svg',
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          )
+                                        : Container(
+                                            height: UpdateProfileConstants.avatarSizeWithImage,
+                                            width: UpdateProfileConstants.avatarSizeWithImage,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: ClipOval(
+                                              child: Image.network(
+                                                currentImage,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error, stackTrace) {
+                                                  return Container(
+                                                    color: Colors.grey.shade300,
+                                                    child: const Icon(
+                                                      Icons.person,
+                                                      size: 60,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  );
+                                                },
+                                                loadingBuilder: (context, child, loadingProgress) {
+                                                  if (loadingProgress == null) return child;
+                                                  return const Center(
+                                                    child: CircularProgressIndicator(
+                                                      color: AppColor.backgroundColor,
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ),
                                   ),
-                                ),
-                              ),
-                        InkWell(
-                          onTap: () async {
-                            await utilsProvider.getgalleryimage();
-                            await utilsProvider.uploadimage();
-                            await utilsProvider.uploadtoFirestore().onError(
-                                  (error, stackTrace) => {
-                                    debugPrint(error.toString()),
-                                    GeneralUtils().showerrorflushbar(
-                                        error.toString(), context)
-                                  },
-                                );
-                          },
-                          child: Padding(
-                            padding: EdgeInsets.only(top: screenheight * 0.03),
-                            child: const Center(
-                              child: Text(
-                                'Thay đổi ảnh hồ sơ',
-                                style: TextStyle(
-                                  fontFamily: 'Raleway-SemiBold',
-                                  color: AppColor.backgroundColor,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.topLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                top: screenheight * 0.02,
-                                left: screenwidth * 0.05),
-                            child: const Text(
-                              'Tên của bạn',
-                              style: TextStyling.formtextstyle,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                              left: screenwidth * 0.04,
-                              right: screenwidth * 0.04,
-                              top: screenheight * 0.01),
-                          child: TextFormField(
-                            controller: nameController,
-                            decoration: InputDecoration(
-                              labelStyle: TextStyling.hinttext,
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.never,
-                              filled: true,
-                              fillColor: const Color(0xffF7F7F9),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                                borderRadius: BorderRadius.circular(12),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        await utilsProvider.getgalleryimage();
+                                        await utilsProvider.uploadimage();
+                                        await utilsProvider.uploadtoFirestore().onError(
+                                              (error, stackTrace) {
+                                                debugPrint(error.toString());
+                                                if (mounted) {
+                                                  GeneralUtils().showerrorflushbar(
+                                                    'Không thể tải ảnh: ${error.toString()}',
+                                                    context,
+                                                  );
+                                                }
+                                              },
+                                            );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: AppColor.backgroundColor,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.camera_alt,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.topLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                top: screenheight * 0.02,
-                                left: screenwidth * 0.05),
-                            child: const Text(
-                              'Email',
-                              style: TextStyling.formtextstyle,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                              left: screenwidth * 0.04,
-                              right: screenwidth * 0.04,
-                              top: screenheight * 0.01),
-                          child: TextFormField(
-                            controller: emailcontroller,
-                            decoration: InputDecoration(
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.never,
-                              labelStyle: TextStyling.hinttext,
-                              filled: true,
-                              fillColor: const Color(0xffF7F7F9),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                                borderRadius: BorderRadius.circular(12),
+                            const SizedBox(height: UpdateProfileConstants.labelSpacing),
+                            const Text(
+                              'Nhấn vào icon camera để thay đổi ảnh',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                color: Color(0xff707B81),
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                        Align(
-                          alignment: Alignment.topLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                top: screenheight * 0.02,
-                                left: screenwidth * 0.05),
-                            child: const Text(
-                              'Số điện thoại',
-                              style: TextStyling.formtextstyle,
-                            ),
-                          ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: UpdateProfileConstants.fieldSpacing * 2),
+                  // Form Fields
+                  _buildFieldLabel('Tên của bạn'),
+                  _buildFormField(
+                    controller: nameController,
+                    icon: Icons.person_outline,
+                    hintText: 'Nhập tên của bạn',
+                  ),
+                  SizedBox(height: UpdateProfileConstants.fieldSpacing),
+                  _buildFieldLabel('Email'),
+                  _buildFormField(
+                    controller: emailcontroller,
+                    icon: Icons.email_outlined,
+                    hintText: 'Nhập email',
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  SizedBox(height: UpdateProfileConstants.fieldSpacing),
+                  _buildFieldLabel('Số điện thoại'),
+                  _buildFormField(
+                    controller: phoneController,
+                    icon: Icons.phone_outlined,
+                    hintText: 'Nhập số điện thoại',
+                    keyboardType: TextInputType.phone,
+                  ),
+                  SizedBox(height: UpdateProfileConstants.fieldSpacing),
+                  _buildFieldLabel('Địa chỉ'),
+                  AddressPicker(
+                    initialAddress: _currentAddress,
+                    onAddressChanged: (address) {
+                      setState(() {
+                        _currentAddress = address;
+                      });
+                    },
+                    detailAddressHint: 'Số nhà, tên đường...',
+                  ),
+                  SizedBox(height: UpdateProfileConstants.fieldSpacing),
+                  _buildFieldLabel('Bảo mật'),
+                  _buildPasswordField(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChangePasswordScreen(),
                         ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                              left: screenwidth * 0.04,
-                              right: screenwidth * 0.04,
-                              top: screenheight * 0.01),
-                          child: TextFormField(
-                            controller: phoneController,
-                            decoration: InputDecoration(
-                              floatingLabelBehavior: FloatingLabelBehavior.never,
-                              labelStyle: TextStyling.hinttext,
-                              filled: true,
-                              fillColor: const Color(0xffF7F7F9),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.topLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                top: screenheight * 0.02,
-                                left: screenwidth * 0.05),
-                            child: const Text(
-                              'Địa chỉ',
-                              style: TextStyling.formtextstyle,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                              left: screenwidth * 0.04,
-                              right: screenwidth * 0.04,
-                              top: screenheight * 0.01),
-                          child: TextFormField(
-                            controller: addressController,
-                            decoration: InputDecoration(
-                              floatingLabelBehavior: FloatingLabelBehavior.never,
-                              labelStyle: TextStyling.hinttext,
-                              filled: true,
-                              fillColor: const Color(0xffF7F7F9),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.topLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                top: screenheight * 0.02,
-                                left: screenwidth * 0.05),
-                            child: const Text(
-                              'Mật khẩu',
-                              style: TextStyling.formtextstyle,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                              left: screenwidth * 0.04,
-                              right: screenwidth * 0.04,
-                              top: screenheight * 0.01),
-                          child: TextFormField(
-                            enabled: false,
-                            decoration: InputDecoration(
-                              label: const Text('*********'),
-                              labelStyle: TextStyling.hinttext,
-                              filled: true,
-                              fillColor: const Color(0xffF7F7F9),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      );
+                    },
+                  ),
+                  SizedBox(height: UpdateProfileConstants.fieldSpacing),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: UpdateProfileConstants.buttonPadding,
+                      vertical: UpdateProfileConstants.buttonPadding,
                     ),
-                  );
-                }),
-            SizedBox(
-              height: screenheight * 0.025,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: RoundButtonTwo(
-                loading: utilsProvider.load,
-                onpress: () {
-                  if (emailcontroller.text.isNotEmpty &&
-                      nameController.text.isNotEmpty) {
-                    utilsProvider.showloading(true);
+                    child: RoundButtonTwo(
+                      loading: utilsProvider.load,
+                      onpress: () {
+                        if (emailcontroller.text.isNotEmpty &&
+                            nameController.text.isNotEmpty) {
+                          utilsProvider.showloading(true);
 
-                    db.doc(id).update({
-                      'Email': emailcontroller.text.toString(),
-                      'Full name': nameController.text.toString(),
-                      'phone': phoneController.text.toString(),
-                      'address': addressController.text.toString()
-                    }).then((value) => {
-                          utilsProvider.showloading(false),
-                          GeneralUtils()
-                              .showsuccessflushbar('Profile Updated!', context)
-                        });
-                  }
-                },
-                title: 'Submit',
+                          // Prepare update data
+                          final updateData = <String, dynamic>{
+                            'Email': emailcontroller.text.toString(),
+                            'Full name': nameController.text.toString(),
+                            'phone': phoneController.text.toString(),
+                          };
+
+                          // Add structured address if available
+                          if (_currentAddress != null) {
+                            final addressMap = _currentAddress!.toMap();
+                            updateData.addAll(addressMap);
+                            // Also keep backward compatibility with 'address' field
+                            updateData['address'] = _currentAddress!.fullAddressString;
+                          }
+
+                          db.doc(id).update(updateData).then((value) {
+                            utilsProvider.showloading(false);
+                            if (mounted && Navigator.canPop(context)) {
+                              GeneralUtils()
+                                  .showsuccessflushbar('Profile Updated!', context);
+                              // Đợi một chút để flushbar hiển thị rồi mới pop
+                              Future.delayed(const Duration(milliseconds: 1500), () {
+                                if (mounted && Navigator.canPop(context)) {
+                                  Navigator.pop(context);
+                                }
+                              });
+                            }
+                          }).catchError((error) {
+                            utilsProvider.showloading(false);
+                            if (mounted) {
+                              GeneralUtils()
+                                  .showerrorflushbar('Lỗi cập nhật: $error', context);
+                            }
+                          });
+                        }
+                      },
+                      title: 'Xác Nhận',
+                    ),
+                  ),
+                  SizedBox(height: UpdateProfileConstants.bottomSpacing),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

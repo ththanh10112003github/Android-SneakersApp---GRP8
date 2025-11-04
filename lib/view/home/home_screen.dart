@@ -9,6 +9,7 @@ import 'package:ecommerce_app/utils/formatter.dart';
 import 'package:ecommerce_app/view/home/product_details.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:provider/provider.dart';
 
@@ -60,7 +61,11 @@ class _HomeScreenState extends State<HomeScreen> {
           apptitle: 'Khám phá',
           appleading: IconButton(
               onPressed: () => Scaffold.of(context).openDrawer(),
-              icon: const Image(image: AssetImage('images/bar.png'))),
+              icon: SvgPicture.asset(
+                'images/bar.svg',
+                width: 24,
+                height: 24,
+              )),
           actions: [
             Padding(
               padding: const EdgeInsets.only(top: 16),
@@ -79,9 +84,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           shape: BoxShape.circle,
                           color: Colors.white,
                         ),
-                        child: Image.asset(
-                          'images/cart.png',
-                          color: Colors.black,
+                        child: SvgPicture.asset(
+                          'images/cart.svg',
+                          colorFilter: const ColorFilter.mode(
+                            Colors.black,
+                            BlendMode.srcIn,
+                          ),
+                          width: 24,
+                          height: 24,
                         ),
                       ),
                     ),

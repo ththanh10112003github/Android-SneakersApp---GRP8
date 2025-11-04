@@ -53,6 +53,7 @@ dependencies:
   dio: ^5.8.0+1
   intl: ^0.20.2
   google_generative_ai: ^0.4.5
+  flutter_svg: ^2.0.9
 # dependency_overrides:
   # stripe_android: "9.5.0+1"
 dev_dependencies:
@@ -93,22 +94,23 @@ flutter:
     - images/sneakers.png
     - images/sneakers2.png
     - images/dialogbox.png
-    - images/home.png
-    - images/heart.png
-    - images/notification.png
-    - images/profile.png
-    - images/cart.png
-    - images/settings.png
+    - images/home.svg
+    - images/heart.svg
+    - images/notification.svg
+    - images/profile.svg
+    - images/default_profile.svg
+    - images/cart.svg
+    - images/settings.svg
     - images/orders.png
     - images/signout.png
-    - images/bar.png
+    - images/bar.svg
     - images/sliders.png
     - images/shoe1.png
     - images/shoe3.png
     - images/phone.png
     - images/email.png
     - images/edit.png
-    - images/emptycart.png
+    - images/emptycart.svg
   fonts:
     - family: Poppins
       fonts:
