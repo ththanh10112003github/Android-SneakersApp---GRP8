@@ -46,6 +46,7 @@ dependencies:
   image_picker: ^1.0.7
   persistent_shopping_cart: ^0.0.7
   shared_preferences: ^2.2.2
+  package_info_plus: ^8.0.0
   flutter_slidable: ^4.0.0
   # flutter_stripe: ^10.1.0
   # stripe_android: ^10.1.0

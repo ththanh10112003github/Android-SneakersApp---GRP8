@@ -309,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Summer Sale',
+                                'Giảm giá đặc biệt',
                                 style: TextStyle(
                                     fontFamily: 'Raleway-SemiBold',
                                     color: Colors.black,

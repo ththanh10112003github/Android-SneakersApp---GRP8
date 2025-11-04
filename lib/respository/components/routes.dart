@@ -11,8 +11,10 @@ import 'package:ecommerce_app/view/home/checkout_screen.dart';
 import 'package:ecommerce_app/view/home/favourites_screen.dart';
 import 'package:ecommerce_app/view/home/home_screen.dart';
 import 'package:ecommerce_app/view/home/notification_screen.dart';
+import 'package:ecommerce_app/view/home/order_detail_screen.dart';
 import 'package:ecommerce_app/view/home/order_history_screen.dart';
 import 'package:ecommerce_app/view/home/profile.dart';
+import 'package:ecommerce_app/view/home/settings_screen.dart';
 import 'package:ecommerce_app/view/home/show_all_products.dart';
 import 'package:ecommerce_app/view/splash_screen/page_view.dart';
 import 'package:ecommerce_app/view/splash_screen/screen_one.dart';
@@ -90,6 +92,17 @@ class Routes {
       case RouteNames.orderSreen:
         return MaterialPageRoute(
             builder: (BuildContext context) => const OrderHistoryScreen());
+      case RouteNames.orderDetailScreen:
+        final orderId = route.arguments as String?;
+        if (orderId == null) {
+          return MaterialPageRoute(
+              builder: (BuildContext context) => const OrderHistoryScreen());
+        }
+        return MaterialPageRoute(
+            builder: (BuildContext context) => OrderDetailScreen(orderId: orderId));
+      case RouteNames.settingsScreen:
+        return MaterialPageRoute(
+            builder: (BuildContext context) => const SettingsScreen());
       case RouteNames.adminHomeScreen:
         return MaterialPageRoute(
             builder: (BuildContext context) => const AdminHomePage());

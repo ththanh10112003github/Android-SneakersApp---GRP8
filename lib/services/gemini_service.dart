@@ -237,7 +237,6 @@ Thông tin khách hàng:
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('products')
-          .limit(20)
           .get();
 
       if (snapshot.docs.isEmpty) {
@@ -248,15 +247,20 @@ Thông tin khách hàng:
         final data = doc.data() as Map<String, dynamic>;
         final price = int.tryParse(data['productprice']?.toString() ?? '0') ?? 0;
         final priceFormatted = (price / 1000000).toStringAsFixed(1);
+        // Tối ưu format để giảm độ dài prompt, chỉ lấy mô tả ngắn gọn
+        final description = (data['description'] ?? '').toString();
+        final shortDescription = description.length > 100 
+            ? '${description.substring(0, 100)}...' 
+            : description;
         return '''
 📦 ${data['productname'] ?? 'N/A'} (${data['brandId'] ?? 'N/A'})
    💰 Giá: ${priceFormatted} triệu VND
    🏷️ Danh mục: ${data['title'] ?? 'N/A'}
-   📝 ${data['description'] ?? 'N/A'}
+   📝 ${shortDescription}
         ''';
       }).join('\n');
 
-      return 'Sản phẩm có sẵn trong cửa hàng:\n$productsList';
+      return 'Sản phẩm có sẵn trong cửa hàng (Tổng: ${snapshot.docs.length} sản phẩm):\n$productsList';
     } catch (e) {
       return 'Lỗi khi lấy danh sách sản phẩm: $e';
     }
@@ -369,11 +373,11 @@ Hãy thể hiện bạn là một chuyên gia giày sneakers thực thụ, luôn
     
     // Detect status query
     String? status;
-    if (lowerMessage.contains('đang xử lý') || lowerMessage.contains('pending')) {
+    if (lowerMessage.contains('Chờ lấy hàng') || lowerMessage.contains('pending')) {
       status = 'pending';
     } else if (lowerMessage.contains('đã giao') || lowerMessage.contains('delivered') || lowerMessage.contains('completed')) {
       status = 'delivered';
-    } else if (lowerMessage.contains('đang giao') || lowerMessage.contains('shipping')) {
+    } else if (lowerMessage.contains('Chờ giao hàng') || lowerMessage.contains('shipping')) {
       status = 'shipping';
     } else if (lowerMessage.contains('đã hủy') || lowerMessage.contains('cancelled')) {
       status = 'cancelled';

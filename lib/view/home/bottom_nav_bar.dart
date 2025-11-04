@@ -286,7 +286,9 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                     title: const Text(
                       'Settings',
                     ),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushNamed(context, RouteNames.settingsScreen);
+                    },
                   ),
                   const Divider(),
                   ListTile(

@@ -112,10 +112,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
         leading: const SizedBox.shrink(),
         elevation: 0,
         actions: [
-          if (notifications.isNotEmpty)
+          if (notifications.isNotEmpty && notifications.any((n) => n['isRead'] == false))
             TextButton(
               onPressed: () {
-                // TODO: Implement mark all as read
+                setState(() {
+                  for (var notification in notifications) {
+                    notification['isRead'] = true;
+                  }
+                });
               },
               child: const Text(
                 'Đánh dấu đã đọc',
@@ -324,14 +328,43 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Expanded(
-                                  child: Text(
-                                    notification['title'] as String,
-                                    style: TextStyle(
-                                      fontFamily: 'Raleway-SemiBold',
-                                      fontSize: 14,
-                                      color: AppColor.backgroundColor,
-                                      fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: notification['title'] as String,
+                                          style: TextStyle(
+                                            fontFamily: 'Raleway-SemiBold',
+                                            fontSize: 14,
+                                            color: AppColor.backgroundColor,
+                                            fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                                          ),
+                                        ),
+                                        if (!isRead)
+                                          WidgetSpan(
+                                            alignment: PlaceholderAlignment.middle,
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(left: 4),
+                                              child: Container(
+                                                width: 6,
+                                                height: 6,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  gradient: RadialGradient(
+                                                    colors: [
+                                                      Colors.red,
+                                                      Colors.red.withOpacity(0.3),
+                                                    ],
+                                                    stops: const [0.0, 1.0],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
                                     ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -388,20 +421,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       ),
                     ],
                   ),
-                  // Badge chưa đọc ở góc trên bên phải
-                  if (!isRead)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),

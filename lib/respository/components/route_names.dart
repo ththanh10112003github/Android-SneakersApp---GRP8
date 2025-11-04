@@ -16,7 +16,9 @@ class RouteNames {
   static const String productsdetails = 'Products details';
   static const String checkOutScreen = 'CheckOut Screen';
   static const String orderSreen = 'order Screen';
+  static const String orderDetailScreen = 'order detail screen';
   static const String chatBoxSreen = 'chat Box Screen';
+  static const String settingsScreen = 'settings screen';
 
   //admin
   static const String adminHomeScreen = 'adminHomeScreen';

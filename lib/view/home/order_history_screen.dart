@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ecommerce_app/respository/components/app_styles.dart';
+import 'package:ecommerce_app/respository/components/route_names.dart';
 import 'package:ecommerce_app/utils/formatter.dart';
+import 'package:ecommerce_app/utils/general_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -56,17 +59,17 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
   String _getStatusLabel(String? status) {
     switch (status) {
       case 'pending':
-        return 'Chờ xử lý';
+        return 'Chờ xác nhận';
       case 'processing':
-        return 'Đang xử lý';
+        return 'Chờ lấy hàng';
       case 'shipped':
-        return 'Đang giao';
+        return 'Chờ giao hàng';
       case 'delivered':
         return 'Đã giao';
       case 'cancelled':
         return 'Đã hủy';
       default:
-        return 'Chờ xử lý';
+        return 'Chờ xác nhận';
     }
   }
 
@@ -108,9 +111,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
               ),
               tabs: const [
                 Tab(text: 'Tất cả'),
-                Tab(text: 'Chờ xử lý'),
-                Tab(text: 'Đang xử lý'),
-                Tab(text: 'Đang giao'),
+                Tab(text: 'Chờ xác nhận'),
+                Tab(text: 'Chờ lấy hàng'),
+                Tab(text: 'Chờ giao hàng'),
                 Tab(text: 'Đã giao'),
                 Tab(text: 'Đã hủy'),
               ],
@@ -210,7 +213,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
             padding: const EdgeInsets.all(16),
             itemCount: filteredOrders.length,
             itemBuilder: (context, index) {
-              final order = filteredOrders[index].data() as Map<String, dynamic>;
+              final orderDoc = filteredOrders[index];
+              final order = orderDoc.data() as Map<String, dynamic>;
+              final orderId = orderDoc.id; // Lấy document ID từ Firestore
               final items = order['items'] as List<dynamic>;
               final status = order['status'] ?? 'pending';
               final statusColor = _getStatusColor(status);
@@ -289,6 +294,83 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                     ),
                     children: [
                       const Divider(height: 1),
+                      // Button xem chi tiết
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                RouteNames.orderDetailScreen,
+                                arguments: orderId,
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.visibility_outlined,
+                              size: 18,
+                            ),
+                            label: const Text(
+                              'Xem chi tiết đơn hàng',
+                              style: TextStyle(
+                                fontFamily: 'Raleway-Medium',
+                                fontSize: 14,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColor.backgroundColor,
+                              side: const BorderSide(
+                                color: AppColor.backgroundColor,
+                                width: 1.5,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (status == 'pending' || status == 'processing')
+                        const Divider(height: 1),
+                      // Button hủy đơn hàng (chỉ hiển thị nếu status là pending hoặc processing)
+                      if (status == 'pending' || status == 'processing')
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                              child: ElevatedButton(
+                              onPressed: () => _cancelOrder(
+                                orderId,
+                                context,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Hủy đơn hàng',
+                                style: TextStyle(
+                                  fontFamily: 'Raleway-SemiBold',
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (status == 'pending' || status == 'processing')
+                        const Divider(height: 1),
                       ...items.map((item) {
                         return ListTile(
                           contentPadding: const EdgeInsets.symmetric(
@@ -386,6 +468,94 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
         return Colors.red;
       default:
         return Colors.grey;
+    }
+  }
+
+  /// Hàm hủy đơn hàng
+  Future<void> _cancelOrder(String orderId, BuildContext context) async {
+    // Hiển thị dialog xác nhận
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Xác nhận hủy đơn hàng',
+            style: TextStyle(
+              fontFamily: 'Raleway-SemiBold',
+              fontSize: 20,
+              color: Color(0xff2B2B2B),
+            ),
+          ),
+          content: const Text(
+            'Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              color: Color(0xff707B81),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text(
+                'Không',
+                style: TextStyle(
+                  fontFamily: 'Raleway-Medium',
+                  color: Color(0xff707B81),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text(
+                'Hủy đơn hàng',
+                style: TextStyle(
+                  fontFamily: 'Raleway-Medium',
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    // Hiển thị loading
+    final utilsProvider = Provider.of<GeneralUtils>(context, listen: false);
+    utilsProvider.showloading(true);
+
+    try {
+      // Cập nhật status đơn hàng thành 'cancelled'
+      await FirebaseFirestore.instance
+          .collection('Orders')
+          .doc(orderId)
+          .update({
+        'status': 'cancelled',
+        'cancelledAt': FieldValue.serverTimestamp(),
+      });
+
+      utilsProvider.showloading(false);
+
+      if (context.mounted) {
+        GeneralUtils().showsuccessflushbar(
+          'Đơn hàng đã được hủy thành công',
+          context,
+        );
+      }
+    } catch (e) {
+      utilsProvider.showloading(false);
+      
+      if (context.mounted) {
+        GeneralUtils().showerrorflushbar(
+          'Không thể hủy đơn hàng: ${e.toString()}',
+          context,
+        );
+      }
     }
   }
 }

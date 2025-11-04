@@ -701,41 +701,43 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildModeSelector(),
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: messages.length + 1,
-              itemBuilder: (context, i) {
-                if (i < messages.length) {
-                  return buildMessage(messages[i]);
-                } else {
-                  return SizedBox(height: _chatMode == ChatMode.ai ? 80 : 180);
-                }
-              },
-            ),
-          ),
-          if (_chatMode == ChatMode.ai)
-            _buildAIChatInput()
-          else ...[
-            Container(
-              color: Colors.grey.shade50,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (step == 0) buildIssuesStep(),
-                  if (step == 1) buildSubStep(),
-                  if (step == 2) buildDescStep(),
-                  if (step == 3) buildOrderStep(),
-                  if (step == 4) buildConfirmStep(),
-                ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildModeSelector(),
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: messages.length + 1,
+                itemBuilder: (context, i) {
+                  if (i < messages.length) {
+                    return buildMessage(messages[i]);
+                  } else {
+                    return SizedBox(height: _chatMode == ChatMode.ai ? 80 : 180);
+                  }
+                },
               ),
             ),
-            buildBottomBar(),
+            if (_chatMode == ChatMode.ai)
+              _buildAIChatInput()
+            else ...[
+              Container(
+                color: Colors.grey.shade50,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (step == 0) buildIssuesStep(),
+                    if (step == 1) buildSubStep(),
+                    if (step == 2) buildDescStep(),
+                    if (step == 3) buildOrderStep(),
+                    if (step == 4) buildConfirmStep(),
+                  ],
+                ),
+              ),
+              buildBottomBar(),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
