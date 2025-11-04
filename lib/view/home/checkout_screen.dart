@@ -7,6 +7,7 @@ import 'package:ecommerce_app/utils/formatter.dart';
 import 'package:ecommerce_app/utils/general_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:persistent_shopping_cart/model/cart_model.dart';
 import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:provider/provider.dart';
@@ -113,7 +114,18 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                   const SizedBox(height: 15),
                   Row(
                     children: [
-                      Image.asset('images/email.png'),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      SvgPicture.asset(
+                        'images/email.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xff707BB1),
+                          BlendMode.srcIn,
+                        ),
+                      ),
                       const SizedBox(
                         width: 17,
                       ),
@@ -126,7 +138,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                               email,
                               style: const TextStyle(
                                 fontFamily: 'Poppins-Medium',
-                                fontSize: 12,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xff1A2530),
                               ),
@@ -204,7 +216,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                                                   utils.showloading(false);
                                                   GeneralUtils()
                                                       .showsuccessflushbar(
-                                                          'Phone number added',
+                                                          'Email đã được cập nhật',
                                                           context);
                                                   fetchdata();
                                                 }).onError((error, stackTrace) {
@@ -259,7 +271,14 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                   ),
                   Row(
                     children: [
-                      Image.asset('images/phone.png'),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      const Icon(
+                        Icons.phone_outlined,
+                        size: 24,
+                        color: Color(0xff707BB1),
+                      ),
                       const SizedBox(
                         width: 17,
                       ),
@@ -282,7 +301,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                               height: 5,
                             ),
                             const Text(
-                              'Phone',
+                              'Số điện thoại',
                               style: TextStyle(
                                 fontFamily: 'Poppins-Medium',
                                 fontSize: 12,
@@ -348,7 +367,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                                               }).then((value) {
                                                 GeneralUtils()
                                                     .showsuccessflushbar(
-                                                        'Phone number added',
+                                                        'Số điện thoại đã được cập nhật',
                                                         context);
                                                 fetchdata();
                                               }).onError((error, stackTrace) {
@@ -400,9 +419,13 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                       const SizedBox(
                         width: 10,
                       ),
-                      const Icon(Icons.location_on_outlined),
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 24,
+                        color: Color(0xff707BB1),
+                      ),
                       const SizedBox(
-                        width: 23,
+                        width: 17,
                       ),
                       Expanded(
                         child: Column(
@@ -558,16 +581,21 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                       const SizedBox(
                         width: 10,
                       ),
-                      Icon(Icons.payment_outlined),
-                      const SizedBox(
-                        width: 23,
+                      const Icon(
+                        Icons.payment_outlined,
+                        size: 24,
+                        color: Color(0xff707BB1),
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Hình thức thanh toán",
+                      const SizedBox(
+                        width: 17,
+                      ),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Phương thức thanh toán",
                             style: const TextStyle(
                               fontFamily: 'Poppins-Medium',
                               fontSize: 14,
@@ -586,7 +614,8 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                               color: Color(0xff707BB1),
                             ),
                           )
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),

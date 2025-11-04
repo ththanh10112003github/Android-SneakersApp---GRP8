@@ -26,13 +26,14 @@ class _CartScreenState extends State<CartScreen> {
         centerTitle: true,
         leading: SizedBox.shrink(),
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(
-          top: 10,
-        ),
+      body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(left: 12, right: 12),
-          child: Column(
+          padding: const EdgeInsets.only(
+            top: 10,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12, right: 12),
+            child: Column(
             children: [
               Expanded(
                 child: cart.showCartItems(
@@ -321,6 +322,7 @@ class _CartScreenState extends State<CartScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

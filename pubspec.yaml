@@ -102,14 +102,14 @@ flutter:
     - images/default_profile.svg
     - images/cart.svg
     - images/settings.svg
-    - images/orders.png
-    - images/signout.png
+    - images/orders.svg
+    - images/signout.svg
     - images/bar.svg
     - images/sliders.png
     - images/shoe1.png
     - images/shoe3.png
     - images/phone.png
-    - images/email.png
+    - images/email.svg
     - images/edit.png
     - images/emptycart.svg
   fonts:

@@ -231,11 +231,14 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                   //3
                   ListTile(
                     textColor: const Color(0xffFFFFFF),
-                    leading: const Image(
-                      image: AssetImage(
-                        'images/orders.png',
+                    leading: SvgPicture.asset(
+                      'images/orders.svg',
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xffFFFFFF),
+                        BlendMode.srcIn,
                       ),
-                      color: Color(0xffFFFFFF),
+                      width: 24,
+                      height: 24,
                     ),
                     title: const Text('Orders'),
                     onTap: () {
@@ -293,11 +296,14 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                   const Divider(),
                   ListTile(
                     textColor: const Color(0xffFFFFFF),
-                    leading: const Image(
-                      image: AssetImage(
-                        'images/signout.png',
+                    leading: SvgPicture.asset(
+                      'images/signout.svg',
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xffFFFFFF),
+                        BlendMode.srcIn,
                       ),
-                      color: Color(0xffFFFFFF),
+                      width: 24,
+                      height: 24,
                     ),
                     title: const Text(
                       'Sign Out',
