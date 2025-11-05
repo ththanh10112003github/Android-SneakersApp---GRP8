@@ -210,6 +210,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               unitprice: products[index]['unitprice'],
                               image: products[index]['imagelink'].toString(),
                               description: products[index]['description'],
+                              salePercent: products[index]['salePercent'] != null
+                                  ? int.parse(products[index]['salePercent'].toString())
+                                  : null,
                             ),
                           ),
                         );
@@ -245,6 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       .toString(),
                                   'description':
                                       products[index]['description'].toString(),
+                                  'salePercent': products[index]['salePercent'],
                                 },
                               );
                             }
@@ -260,9 +264,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         id: products[index]['productId'],
                         subtitle: products[index]['productname'],
                         imagelink: products[index]['imagelink'],
-                        price: Formatter.formatCurrency(
-                            double.parse(products[index]['productprice'])
-                                .toInt()),
+                        originalPrice: Formatter.formatCurrency(
+                          double.parse(products[index]['productprice']).toInt()),
+                        salePercent: products[index]['salePercent'] != null
+                            ? int.parse(products[index]['salePercent'].toString())
+                            : 0,
+                        salePrice: products[index]['salePercent'] != null
+                            ? Formatter.formatCurrency(
+                                (double.parse(products[index]['productprice']) *
+                                        (100 - int.parse(products[index]['salePercent'].toString())) /
+                                        100)
+                                    .toInt())
+                            : Formatter.formatCurrency(
+                                double.parse(products[index]['productprice'])
+                                    .toInt()),
                         quantity: 0,
                       ),
                     );

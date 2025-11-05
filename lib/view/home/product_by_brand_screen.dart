@@ -78,8 +78,19 @@ class _ProductByBrandScreenState extends State<ProductByBrandScreen> {
             return ShowProductContainer(
               subtitle: products[index]['productname'],
               imagelink: products[index]['imagelink'],
-              price: Formatter.formatCurrency(
+              originalPrice: Formatter.formatCurrency(
                   double.parse(products[index]['productprice']).toInt()),
+              salePercent: products[index]['salePercent'] != null
+                  ? int.parse(products[index]['salePercent'].toString())
+                  : 0,
+              salePrice: products[index]['salePercent'] != null
+                  ? Formatter.formatCurrency(
+                      (double.parse(products[index]['productprice']) *
+                          (100 - int.parse(products[index]['salePercent'].toString())) /
+                          100)
+                          .toInt())
+                  : Formatter.formatCurrency(
+                      double.parse(products[index]['productprice']).toInt()),
               quantity: 0,
               fav: IconButton(
                   onPressed: () async {

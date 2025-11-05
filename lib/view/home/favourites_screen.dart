@@ -79,12 +79,26 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
                     );
                   },
                   child: CartContainer(
-                    price: Formatter.formatCurrency(
+                    originalPrice: Formatter.formatCurrency(
                         double.parse(snapshot.data!.docs[index]['price'])
                             .toInt()),
                     subtitle: snapshot.data!.docs[index]['name'].toString(),
                     title: snapshot.data!.docs[index]['subtitle'],
                     imagelink: snapshot.data!.docs[index]['image'],
+                    salePercent: snapshot.data!.docs[index].data().toString().contains('salePercent') &&
+                            snapshot.data!.docs[index]['salePercent'] != null
+                        ? int.parse(snapshot.data!.docs[index]['salePercent'].toString())
+                        : null,
+                    salePrice: snapshot.data!.docs[index].data().toString().contains('salePercent') &&
+                            snapshot.data!.docs[index]['salePercent'] != null
+                        ? Formatter.formatCurrency(
+                            (double.parse(snapshot.data!.docs[index]['price']) *
+                                    (100 - int.parse(snapshot.data!.docs[index]['salePercent'].toString())) /
+                                    100)
+                                .toInt())
+                        : Formatter.formatCurrency(
+                            double.parse(snapshot.data!.docs[index]['price'])
+                                .toInt()),
                   ),
                 );
               }),

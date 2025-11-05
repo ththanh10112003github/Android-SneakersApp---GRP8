@@ -2,20 +2,26 @@ import 'package:ecommerce_app/respository/components/app_styles.dart';
 import 'package:flutter/material.dart';
 
 class ProductContainer extends StatelessWidget {
-  final String title, subtitle, price;
+  final String title, subtitle;
   final String id;
   final String imagelink;
   final IconButton fav;
   final int quantity;
+  final int? salePercent;
+  final String originalPrice;
+  final String salePrice;
+  
   const ProductContainer({
     super.key,
     this.title = 'BÁN CHẠY',
     required this.subtitle,
     required this.imagelink,
-    required this.price,
+    required this.originalPrice,
     required this.id,
     required this.quantity,
     required this.fav,
+    this.salePercent,
+    required this.salePrice,
   });
 
   @override
@@ -59,15 +65,61 @@ class ProductContainer extends StatelessWidget {
                   fontSize: 15,
                   color: Colors.black),
             ),
-            Text(
-              price,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                color: Colors.blue,
-                fontWeight: FontWeight.w900,
+            if (salePercent != null && salePercent! > 0) 
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        salePrice,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          color: Colors.red,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '-$salePercent%',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 10,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    originalPrice,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: Colors.grey,
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                originalPrice,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -75,40 +127,38 @@ class ProductContainer extends StatelessWidget {
   }
 }
 
-///
 class CartContainer extends StatelessWidget {
+  final String title, subtitle;
   final String imagelink;
-  final String title;
-  final String subtitle;
-  final String price;
+  final String originalPrice;
+  final String salePrice;
+  final int? salePercent;
 
   const CartContainer({
     super.key,
-    required this.imagelink,
-    required this.price,
-    required this.subtitle,
     required this.title,
+    required this.subtitle,
+    required this.imagelink,
+    required this.originalPrice,
+    required this.salePrice,
+    this.salePercent,
   });
 
   @override
   Widget build(BuildContext context) {
-    final screenwidth = MediaQuery.of(context).size.width;
-
     return Container(
-      height: 330,
-      width: screenwidth * 0.1,
       decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadiusDirectional.all(Radius.circular(16))),
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(12),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Image.network(
               imagelink,
-              height: 90,
+              height: 70,
             ),
             Text(
               title,
@@ -128,15 +178,61 @@ class CartContainer extends StatelessWidget {
                 color: Colors.black,
               ),
             ),
-            Text(
-              price,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                color: Colors.blue,
-                fontWeight: FontWeight.w900,
+            if (salePercent != null && salePercent! > 0)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        salePrice,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          color: Colors.red,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '-$salePercent%',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 10,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    originalPrice,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: Colors.grey,
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                originalPrice,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -145,21 +241,27 @@ class CartContainer extends StatelessWidget {
 }
 
 class ShowProductContainer extends StatelessWidget {
-  final String title, subtitle, price;
+  final String title, subtitle;
   final String imagelink;
   final IconButton fav;
   final int quantity;
   final VoidCallback onclick;
+  final int? salePercent;
+  final String originalPrice;
+  final String salePrice;
 
-  const ShowProductContainer(
-      {super.key,
-      this.title = 'BÁN CHẠY',
-      required this.subtitle,
-      required this.imagelink,
-      required this.price,
-      required this.quantity,
-      required this.fav,
-      required this.onclick});
+  const ShowProductContainer({
+    super.key,
+    this.title = 'BÁN CHẠY',
+    required this.subtitle,
+    required this.imagelink,
+    required this.originalPrice,
+    required this.quantity,
+    required this.fav,
+    required this.onclick,
+    this.salePercent,
+    required this.salePrice,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -202,15 +304,61 @@ class ShowProductContainer extends StatelessWidget {
                   color: Colors.black,
                 ),
               ),
-              Text(
-                price,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 14,
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w900,
+              if (salePercent != null && salePercent! > 0)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          salePrice,
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            color: Colors.red,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '-$salePercent%',
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 10,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      originalPrice,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Text(
+                  originalPrice,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
             ],
           ),
         ),

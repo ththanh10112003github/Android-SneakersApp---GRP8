@@ -18,6 +18,7 @@ class ProductDetails extends StatefulWidget {
   final String unitprice;
   final String productid;
   final String description;
+  final int? salePercent;
 
   const ProductDetails({
     super.key,
@@ -27,6 +28,7 @@ class ProductDetails extends StatefulWidget {
     required this.unitprice,
     required this.productid,
     required this.description,
+    this.salePercent,
   });
 
   @override
@@ -309,13 +311,58 @@ class _ProductDetailsState extends State<ProductDetails> {
               ),
               const SizedBox(height: 10),
               // Giá
-              Text(
-                Formatter.formatCurrency(double.parse(widget.price).toInt()),
-                style: TextStyling.headingstyle.copyWith(
-                  fontSize: 20,
-                  color: AppColor.backgroundColor,
+              if (widget.salePercent != null && widget.salePercent! > 0)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          Formatter.formatCurrency(
+                            (double.parse(widget.price) * (100 - widget.salePercent!) / 100).toInt()
+                          ),
+                          style: TextStyling.headingstyle.copyWith(
+                            fontSize: 22,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '-${widget.salePercent}%',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      Formatter.formatCurrency(double.parse(widget.price).toInt()),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Text(
+                  Formatter.formatCurrency(double.parse(widget.price).toInt()),
+                  style: TextStyling.headingstyle.copyWith(
+                    fontSize: 20,
+                    color: AppColor.backgroundColor,
+                  ),
                 ),
-              ),
               const SizedBox(height: 12),
               // Mô tả
               Text(
@@ -452,6 +499,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                                     productDetails: {
                                       "size": sizePicker,
                                       "color": color,
+                                      "salePercent": widget.salePercent,
                                     },
                                   ),
                                 );

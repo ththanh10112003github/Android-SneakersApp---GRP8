@@ -115,14 +115,63 @@ class _CartScreenState extends State<CartScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Text(
-                                          Formatter.formatCurrency(
-                                              data[index].unitPrice.toInt()),
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 14,
-                                            color: Colors.blue,
-                                          ),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if (data[index].productDetails?['salePercent'] != null)
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    Formatter.formatCurrency(
+                                                      (data[index].unitPrice * 
+                                                        (100 - int.parse(data[index].productDetails!['salePercent'].toString())) / 
+                                                        100).toInt()
+                                                    ),
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 14,
+                                                      color: Colors.red,
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 5),
+                                                  Container(
+                                                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.red,
+                                                      borderRadius: BorderRadius.circular(4),
+                                                    ),
+                                                    child: Text(
+                                                      '-${data[index].productDetails!['salePercent']}%',
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            if (data[index].productDetails?['salePercent'] != null)
+                                              Text(
+                                                Formatter.formatCurrency(
+                                                    data[index].unitPrice.toInt()),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 12,
+                                                  color: Colors.grey,
+                                                  decoration: TextDecoration.lineThrough,
+                                                ),
+                                              )
+                                            else
+                                              Text(
+                                                Formatter.formatCurrency(
+                                                    data[index].unitPrice.toInt()),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 14,
+                                                  color: Colors.blue,
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                         Spacer(),
                                         InkWell(

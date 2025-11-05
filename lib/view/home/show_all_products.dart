@@ -117,9 +117,21 @@ class _ShowProductsState extends State<ShowProducts> {
                   return ShowProductContainer(
                     subtitle: filteredProducts[index]['productname'],
                     imagelink: filteredProducts[index]['imagelink'],
-                    price: Formatter.formatCurrency(
+                    originalPrice: Formatter.formatCurrency(
                         double.parse(filteredProducts[index]['productprice'])
                             .toInt()),
+                    salePercent: filteredProducts[index]['salePercent'] != null
+                        ? int.parse(filteredProducts[index]['salePercent'].toString())
+                        : 0,
+                    salePrice: filteredProducts[index]['salePercent'] != null
+                        ? Formatter.formatCurrency(
+                            (double.parse(filteredProducts[index]['productprice']) *
+                                    (100 - int.parse(filteredProducts[index]['salePercent'].toString())) /
+                                    100)
+                                .toInt())
+                        : Formatter.formatCurrency(
+                            double.parse(filteredProducts[index]['productprice'])
+                                .toInt()),
                     quantity: 0,
                     fav: IconButton(
                       onPressed: () async {
@@ -174,6 +186,9 @@ class _ShowProductsState extends State<ShowProducts> {
                             unitprice: filteredProducts[index]['unitprice'],
                             image: filteredProducts[index]['imagelink'],
                             description: filteredProducts[index]['description'],
+                            salePercent: filteredProducts[index]['salePercent'] != null
+                                ? int.parse(filteredProducts[index]['salePercent'].toString())
+                                : null,
                           ),
                         ),
                       );
