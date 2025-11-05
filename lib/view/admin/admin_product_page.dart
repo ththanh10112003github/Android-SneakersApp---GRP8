@@ -17,6 +17,34 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> products = [];
 
+  int _getSalePercent(Map<String, dynamic> product) {
+    try {
+      if (product['salePercent'] != null) {
+        return int.tryParse(product['salePercent'].toString()) ?? 0;
+      }
+    } catch (e) {
+      print('Error parsing salePercent: $e');
+    }
+    return 0;
+  }
+
+  int _getPrice(Map<String, dynamic> product) {
+    try {
+      if (product['productprice'] != null) {
+        return int.tryParse(product['productprice'].toString()) ?? 0;
+      }
+    } catch (e) {
+      print('Error parsing price: $e');
+    }
+    return 0;
+  }
+
+  int _calculateSalePrice(Map<String, dynamic> product) {
+    int originalPrice = _getPrice(product);
+    int salePercent = _getSalePercent(product);
+    return (originalPrice * (100 - salePercent) / 100).toInt();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -164,10 +192,75 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
                       width: 50,
                       height: 50,
                       fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 50,
+                          height: 50,
+                          color: Colors.grey[200],
+                          child: Icon(Icons.error_outline, color: Colors.red),
+                        );
+                      },
+                      loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 50,
+                          height: 50,
+                          color: Colors.grey[200],
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     title: Text(product['productname']),
-                    subtitle: Text(
-                        "Giá: ${Formatter.formatCurrency(double.parse(product['productprice']).toInt())}"),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_getSalePercent(product) > 0) ...[
+                            Row(
+                              children: [
+                                Text(
+                                  "Giá gốc: ${Formatter.formatCurrency(int.tryParse(product['productprice'].toString()) ?? 0)}",
+                                  style: TextStyle(
+                                    decoration: TextDecoration.lineThrough,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    "-${int.tryParse(product['salePercent'].toString()) ?? 0}%",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              "Giá sale: ${Formatter.formatCurrency(((int.tryParse(product['productprice'].toString()) ?? 0) * (100 - (int.tryParse(product['salePercent'].toString()) ?? 0)) / 100).toInt())}",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ] else
+                            Text(
+                              "Giá: ${Formatter.formatCurrency(_getPrice(product))}",
+                            ),
+                      ],
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

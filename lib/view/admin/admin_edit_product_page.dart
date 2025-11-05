@@ -20,6 +20,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
   final TextEditingController descController = TextEditingController();
+  final TextEditingController salePercentController = TextEditingController();
   String? selectedImageUrl;
   String? selectedBrandId;
   List<Map<String, String>> brands = [];
@@ -37,6 +38,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       nameController.text = widget.productData!['productname'] ?? '';
       priceController.text = widget.productData!['productprice'] ?? '';
       descController.text = widget.productData!['description'] ?? '';
+      salePercentController.text = widget.productData!['salePercent']?.toString() ?? '';
       selectedImageUrl = widget.productData!['imagelink'];
     }
   }
@@ -92,7 +94,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
       "unitprice": priceController.text,
       "description": descController.text,
       "imagelink": selectedImageUrl,
-      "title": "BÁN CHẠY"
+      "title": "BÁN CHẠY",
+      "salePercent": salePercentController.text.isNotEmpty 
+          ? int.parse(salePercentController.text)
+          : null
     };
 
     FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -157,6 +162,22 @@ class _EditProductScreenState extends State<EditProductScreen> {
               controller: priceController,
               decoration: InputDecoration(
                 labelText: "Giá sản phẩm",
+                labelStyle: TextStyling.hinttext,
+                floatingLabelBehavior: FloatingLabelBehavior.never,
+                filled: true,
+                fillColor: const Color.fromARGB(255, 233, 233, 236),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 15),
+            TextField(
+              controller: salePercentController,
+              decoration: InputDecoration(
+                labelText: "Giảm giá (%)",
                 labelStyle: TextStyling.hinttext,
                 floatingLabelBehavior: FloatingLabelBehavior.never,
                 filled: true,

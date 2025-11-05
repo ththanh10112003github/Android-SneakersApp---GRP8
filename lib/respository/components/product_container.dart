@@ -268,8 +268,8 @@ class ShowProductContainer extends StatelessWidget {
     return InkWell(
       onTap: onclick,
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.9,
-        width: 158,
+        height: MediaQuery.of(context).size.height * 0.28,
+        width: MediaQuery.of(context).size.width * 0.42,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadiusDirectional.all(

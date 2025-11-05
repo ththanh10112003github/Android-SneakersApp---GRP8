@@ -35,10 +35,16 @@ class _ProductByBrandScreenState extends State<ProductByBrandScreen> {
           .where('brandId', isEqualTo: widget.brandId)
           .get();
       products = querySnapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
+          .map((doc) => {
+                'id': doc.id,
+                ...doc.data() as Map<String, dynamic>
+              })
           .toList();
+      print('Found ${products.length} products for brand ${widget.brandName}');
       setState(() {});
-    } catch (_) {}
+    } catch (e) {
+      print('Error fetching products: $e');
+    }
   }
 
   @override
@@ -82,7 +88,7 @@ class _ProductByBrandScreenState extends State<ProductByBrandScreen> {
                   double.parse(products[index]['productprice']).toInt()),
               salePercent: products[index]['salePercent'] != null
                   ? int.parse(products[index]['salePercent'].toString())
-                  : 0,
+                  : null,
               salePrice: products[index]['salePercent'] != null
                   ? Formatter.formatCurrency(
                       (double.parse(products[index]['productprice']) *
@@ -137,6 +143,9 @@ class _ProductByBrandScreenState extends State<ProductByBrandScreen> {
                       unitprice: products[index]['unitprice'],
                       image: products[index]['imagelink'],
                       description: products[index]['description'],
+                      salePercent: products[index]['salePercent'] != null
+                          ? int.parse(products[index]['salePercent'].toString())
+                          : null,
                     ),
                   ),
                 );
