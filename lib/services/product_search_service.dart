@@ -27,6 +27,7 @@ class ProductSearchService {
             'productprice': data['productprice'] ?? 0,
             'title': data['title'] ?? 'N/A',
             'description': data['description'] ?? 'N/A',
+            'salePercent': data['salePercent'],
           };
         }
       }
@@ -57,6 +58,7 @@ class ProductSearchService {
             'productprice': data['productprice'] ?? 0,
             'title': data['title'] ?? 'N/A',
             'description': data['description'] ?? 'N/A',
+            'salePercent': data['salePercent'],
           };
         }
       }

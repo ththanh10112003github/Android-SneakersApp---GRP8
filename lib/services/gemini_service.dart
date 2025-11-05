@@ -332,24 +332,42 @@ $itemsDetail
             final name = product['productname'] as String? ?? product['productname']?.toString() ?? 'N/A';
             final imageLink = product['imagelink'] as String? ?? product['imagelink']?.toString() ?? '';
             
-            double price = 0.0;
+            double originalPrice = 0.0;
             final priceValue = product['productprice'];
             if (priceValue is int) {
-              price = priceValue.toDouble();
+              originalPrice = priceValue.toDouble();
             } else if (priceValue is double) {
-              price = priceValue;
+              originalPrice = priceValue;
             } else if (priceValue is String) {
-              price = double.tryParse(priceValue) ?? 0.0;
+              originalPrice = double.tryParse(priceValue) ?? 0.0;
             } else {
-              price = double.tryParse(priceValue.toString()) ?? 0.0;
+              originalPrice = double.tryParse(priceValue.toString()) ?? 0.0;
             }
             
-            if (price <= 0) {
+            // Tính giá giảm nếu có salePercent
+            double finalPrice = originalPrice;
+            final salePercentValue = product['salePercent'];
+            if (salePercentValue != null) {
+              int? salePercent;
+              if (salePercentValue is int) {
+                salePercent = salePercentValue;
+              } else if (salePercentValue is String) {
+                salePercent = int.tryParse(salePercentValue);
+              } else {
+                salePercent = int.tryParse(salePercentValue.toString());
+              }
+              
+              if (salePercent != null && salePercent > 0) {
+                finalPrice = originalPrice * (100 - salePercent) / 100;
+              }
+            }
+            
+            if (finalPrice <= 0) {
               purchaseResult = '❌ Lỗi: Không thể xác định giá sản phẩm. Vui lòng thử lại hoặc liên hệ hỗ trợ.';
             } else if (productId.isEmpty) {
               purchaseResult = '❌ Lỗi: Không tìm thấy mã sản phẩm. Vui lòng thử lại.';
             } else {
-              purchaseResult = 'PRODUCT_SELECTION:$productId:$name:$imageLink:$price';
+              purchaseResult = 'PRODUCT_SELECTION:$productId:$name:$imageLink:$finalPrice';
             }
           }
         }

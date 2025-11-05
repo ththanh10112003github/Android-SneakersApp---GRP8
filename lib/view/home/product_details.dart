@@ -489,12 +489,18 @@ class _ProductDetailsState extends State<ProductDetails> {
                                     : colorPicker == Colors.blue
                                         ? 'Blue'
                                         : 'Grey';
+                                
+                                double finalPrice = double.parse(widget.unitprice);
+                                if (widget.salePercent != null && widget.salePercent! > 0) {
+                                  finalPrice = double.parse(widget.price) * (100 - widget.salePercent!) / 100;
+                                }
+                                
                                 await cart.addToCart(
                                   PersistentShoppingCartItem(
                                     productThumbnail: widget.image,
                                     productId: widget.productid,
                                     productName: widget.title,
-                                    unitPrice: double.parse(widget.unitprice),
+                                    unitPrice: finalPrice,
                                     quantity: 1,
                                     productDetails: {
                                       "size": sizePicker,
