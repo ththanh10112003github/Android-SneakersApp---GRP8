@@ -10,11 +10,11 @@
 .svn/
 migrate_working_dir/
 
-# Firebase related
-/firebase-importer/service-account-key.json
-google-services.json
-**/firebase_options.dart
-**/GoogleService-Info.plist
+# Firebase related - Commented out để push config files
+# /firebase-importer/service-account-key.json
+# google-services.json
+# **/firebase_options.dart
+# **/GoogleService-Info.plist
 
 # IntelliJ related
 *.iml
@@ -22,10 +22,8 @@ google-services.json
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code related
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -48,6 +46,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Config files containing sensitive information
-lib/config/
-lib/utils/stripe_config.dart
+# Config files containing sensitive information - Commented out để push key files
+# lib/config/
+# lib/utils/stripe_config.dart

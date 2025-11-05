@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1060042762229",
+    "project_id": "sneakersapp-e535c",
+    "storage_bucket": "sneakersapp-e535c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060042762229:android:5ac298fe18e7ed4ec0a2bc",
+        "android_client_info": {
+          "package_name": "com.example.ecommerce_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoCW7K5f60cIoL08EanBtJTpkYVsklPw0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+
