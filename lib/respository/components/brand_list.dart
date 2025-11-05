@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ecommerce_app/view/home/product_by_brand_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class BrandList extends StatefulWidget {
   const BrandList({super.key});
@@ -88,18 +89,26 @@ class _BrandListState extends State<BrandList> {
                           ),
                           Padding(
                             padding: const EdgeInsets.only(right: 8.0),
-                            child: CircleAvatar(
-                              radius: 16,
-                              backgroundColor: Colors.grey[200],
-                              backgroundImage: brand['image'].isNotEmpty
-                                  ? NetworkImage(brand['image'])
-                                  : null,
-                              child: brand['image'].isEmpty
-                                  ? const Icon(
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                              ),
+                              child: brand['image'].isNotEmpty
+                                  ? ClipOval(
+                                      child: SvgPicture.network(
+                                        brand['image'],
+                                        width: 20,
+                                        height: 20,
+                                        fit: BoxFit.contain,
+                                      ),
+                                    )
+                                  : const Icon(
                                       Icons.image,
                                       color: Colors.grey,
-                                    )
-                                  : null,
+                                      size: 20,
+                                    ),
                             ),
                           ),
                         ],

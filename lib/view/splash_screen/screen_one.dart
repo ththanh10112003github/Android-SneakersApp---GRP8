@@ -3,6 +3,7 @@ import 'package:ecommerce_app/respository/components/app_styles.dart';
 import 'package:ecommerce_app/respository/components/route_names.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ScreenOne extends StatefulWidget {
   const ScreenOne({super.key});
@@ -31,13 +32,23 @@ class _ScreenOneState extends State<ScreenOne> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: AppColor.backgroundColor,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Center(child: Image(image: AssetImage('images/Nike logo.png'))),
+          Center(
+            child: SvgPicture.asset(
+              'images/Nike logo.svg',
+              width: 200,
+              height: 200,
+              colorFilter: const ColorFilter.mode(
+                Colors.white,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
         ],
       ),
     );
