@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
-/// Model cho Tỉnh/Thành phố
 class Province {
   final String code;
   final String name;
@@ -37,7 +36,6 @@ class Province {
   }
 }
 
-/// Model cho Huyện/Quận
 class District {
   final String code;
   final String name;
@@ -70,7 +68,6 @@ class District {
   }
 }
 
-/// Model cho Xã/Phường
 class Ward {
   final String code;
   final String name;
@@ -103,22 +100,17 @@ class Ward {
   }
 }
 
-/// Service để lấy dữ liệu địa chỉ Việt Nam từ API
 class VietnamAddressService {
   static const String baseUrl = 'https://provinces.open-api.vn/api';
 
-  // Tạo custom HttpClient để bypass SSL verification (chỉ dùng trong development)
   static http.Client _createHttpClient() {
     final httpClient = HttpClient();
     httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) {
-      // Bypass SSL verification cho development
-      // WARNING: Chỉ dùng trong development, không dùng trong production!
       return true;
     };
     return IOClient(httpClient);
   }
 
-  /// Lấy danh sách tất cả tỉnh/thành phố
   static Future<List<Province>> getProvinces() async {
     final client = _createHttpClient();
     try {
@@ -139,7 +131,6 @@ class VietnamAddressService {
     }
   }
 
-  /// Lấy danh sách huyện/quận theo mã tỉnh/thành phố
   static Future<List<District>> getDistrictsByProvince(String provinceCode) async {
     final client = _createHttpClient();
     try {
@@ -163,7 +154,6 @@ class VietnamAddressService {
     }
   }
 
-  /// Lấy danh sách xã/phường theo mã huyện/quận
   static Future<List<Ward>> getWardsByDistrict(String districtCode) async {
     final client = _createHttpClient();
     try {
@@ -187,7 +177,6 @@ class VietnamAddressService {
     }
   }
 
-  /// Lấy thông tin chi tiết tỉnh/thành phố theo code
   static Future<Province?> getProvinceByCode(String code) async {
     final client = _createHttpClient();
     try {
@@ -206,7 +195,6 @@ class VietnamAddressService {
     }
   }
 
-  /// Lấy thông tin chi tiết huyện/quận theo code
   static Future<District?> getDistrictByCode(String code) async {
     final client = _createHttpClient();
     try {
@@ -225,7 +213,6 @@ class VietnamAddressService {
     }
   }
 
-  /// Lấy thông tin chi tiết xã/phường theo code
   static Future<Ward?> getWardByCode(String code) async {
     final client = _createHttpClient();
     try {

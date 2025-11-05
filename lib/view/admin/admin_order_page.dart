@@ -38,7 +38,6 @@ class _AdminOrderListScreenState extends State<AdminOrderListScreen> {
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore
             .collection('Orders')
-            .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -49,7 +48,20 @@ class _AdminOrderListScreenState extends State<AdminOrderListScreen> {
             return const Center(child: Text('Không có đơn hàng nào.'));
           }
 
-          var orders = snapshot.data!.docs;
+          var orders = snapshot.data!.docs.toList();
+          orders.sort((a, b) {
+            final aData = a.data() as Map<String, dynamic>;
+            final bData = b.data() as Map<String, dynamic>;
+            final aTimestamp = aData['timestamp'];
+            final bTimestamp = bData['timestamp'];
+            if (aTimestamp == null && bTimestamp == null) return 0;
+            if (aTimestamp == null) return 1;
+            if (bTimestamp == null) return -1;
+            if (aTimestamp is Timestamp && bTimestamp is Timestamp) {
+              return bTimestamp.compareTo(aTimestamp); // Descending order
+            }
+            return 0;
+          });
 
           return ListView.builder(
             itemCount: orders.length,

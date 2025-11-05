@@ -31,20 +31,36 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     try {
       final orderSnapshot = await FirebaseFirestore.instance
           .collection('Orders')
+          .where('orderId', isEqualTo: widget.orderId)
+          .limit(1)
+          .get();
+      
+      if (orderSnapshot.docs.isNotEmpty) {
+        final doc = orderSnapshot.docs.first;
+        setState(() {
+          orderData = doc.data() as Map<String, dynamic>;
+          isLoading = false;
+        });
+        return;
+      }
+      
+      final fallbackSnapshot = await FirebaseFirestore.instance
+          .collection('Orders')
           .doc(widget.orderId)
           .get();
-
-      if (orderSnapshot.exists) {
+      
+      if (fallbackSnapshot.exists) {
         setState(() {
-          orderData = orderSnapshot.data() as Map<String, dynamic>;
+          orderData = fallbackSnapshot.data() as Map<String, dynamic>;
           isLoading = false;
         });
-      } else {
-        setState(() {
-          hasError = true;
-          isLoading = false;
-        });
+        return;
       }
+      
+      setState(() {
+        hasError = true;
+        isLoading = false;
+      });
     } catch (e) {
       setState(() {
         hasError = true;
@@ -278,13 +294,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Card thông tin đơn hàng
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -302,9 +318,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             'Mã đơn hàng',
                             style: TextStyling.subheading.copyWith(fontSize: 12),
                           ),
-                          Text(
-                            '#${orderData!['orderId']?.toString().substring(orderData!['orderId'].toString().length - 8) ?? 'N/A'}',
-                            style: TextStyling.formtextstyle.copyWith(fontSize: 16),
+                          Flexible(
+                            child: Text(
+                              '#${orderData!['orderId']?.toString().substring(orderData!['orderId'].toString().length - 8) ?? 'N/A'}',
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xff2B2B2B),
+                                letterSpacing: 0.5,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                           ),
                         ],
                       ),
@@ -354,31 +380,33 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Tổng tiền',
-                            style: TextStyling.subheading.copyWith(fontSize: 12),
-                          ),
-                          Text(
-                            Formatter.formatCurrency(
-                              double.parse(orderData!['totalPrice'].toString()).toInt(),
-                            ),
-                            style: TextStyling.formtextstyle.copyWith(
-                              fontSize: 18,
-                              color: AppColor.backgroundColor,
-                            ),
-                          ),
-                        ],
-                      ),
+                                             Row(
+                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                         children: [
+                           Text(
+                             'Tổng tiền',
+                             style: TextStyling.subheading.copyWith(fontSize: 12),
+                           ),
+                           Text(
+                             Formatter.formatCurrency(
+                               double.parse(orderData!['totalPrice'].toString()).toInt(),
+                             ),
+                             style: TextStyle(
+                               fontFamily: 'monospace',
+                               fontSize: 18,
+                               fontWeight: FontWeight.bold,
+                               color: AppColor.backgroundColor,
+                               letterSpacing: 0.5,
+                             ),
+                           ),
+                         ],
+                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Card thông tin giao hàng
+              const SizedBox(height: 16              ),
+              
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -397,6 +425,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       _buildInfoRow(
                         Icons.person_outline,
                         'Người nhận',
+                        orderData!['name'] ?? orderData!['email'] ?? 'N/A',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildInfoRow(
+                        Icons.email_outlined,
+                        'Email',
                         orderData!['email'] ?? 'N/A',
                       ),
                       const SizedBox(height: 12),
@@ -409,15 +443,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       _buildInfoRow(
                         Icons.location_on_outlined,
                         'Địa chỉ',
-                        orderData!['address'] ?? 'N/A',
+                        orderData!['address'] ?? orderData!['fullAddress'] ?? 'N/A',
                       ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Danh sách sản phẩm
+              
               Text(
                 'Sản phẩm',
                 style: TextStyling.formtextstyle.copyWith(fontSize: 16),
@@ -502,9 +535,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 16),
-
-              // Button hủy đơn hàng (nếu có thể)
+              const SizedBox(height: 16              ),
+              
               if (canCancel)
                 Consumer<GeneralUtils>(
                   builder: (context, utilsProvider, child) {
@@ -538,6 +570,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   },
                 ),
             ],
+            ),
           ),
         ),
       ),

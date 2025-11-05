@@ -22,21 +22,42 @@ class CheckOutScreen extends StatefulWidget {
 class _CheckOutScreenState extends State<CheckOutScreen> {
   final auth = FirebaseAuth.instance;
   var userdata;
+  var name = '';
   var phone = '';
   var email = '';
   String address = '';
   FullAddress? _currentAddress;
   PersistentShoppingCart cart = PersistentShoppingCart();
+  
+  List<PersistentShoppingCartItem>? _selectedItems;
+  double _selectedTotalPrice = 0.0;
 
   final db = FirebaseFirestore.instance.collection('User Data');
+  final TextEditingController namecontroller = TextEditingController();
   final TextEditingController phonecontroller = TextEditingController();
   final TextEditingController emailcontroller = TextEditingController();
 
   @override
   void initState() {
-    fetchdata();
-
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args != null && args is List<PersistentShoppingCartItem>) {
+        setState(() {
+          _selectedItems = args;
+          _selectedTotalPrice = _calculateSelectedTotal(args);
+        });
+      }
+    });
+    fetchdata();
+  }
+  
+  double _calculateSelectedTotal(List<PersistentShoppingCartItem> items) {
+    double total = 0.0;
+    for (var item in items) {
+      total += item.unitPrice * item.quantity;
+    }
+    return total;
   }
 
   Future fetchdata() async {
@@ -44,16 +65,15 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
       DocumentSnapshot db2 = await db.doc(auth.currentUser!.uid).get();
       userdata = db2.data();
       setState(() {
+        name = userdata['Full name'] ?? '';
         email = userdata['Email'];
+        phone = userdata['phone'] ?? '';
       });
-      phone = userdata['phone'];
       
-      // Load structured address if available
       if (userdata['provinceCode'] != null || userdata['provinceName'] != null) {
         _currentAddress = FullAddress.fromMap(userdata);
         address = _currentAddress!.fullAddressString;
       } else if (userdata['address'] != null && userdata['address'].toString().isNotEmpty) {
-        // Backward compatibility: use old string address
         address = userdata['address'].toString();
         _currentAddress = FullAddress.fromString(address);
       } else {
@@ -112,6 +132,158 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                     ),
                   ),
                   const SizedBox(height: 15),
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      const Icon(
+                        Icons.person_outline,
+                        size: 24,
+                        color: Color(0xff707BB1),
+                      ),
+                      const SizedBox(
+                        width: 17,
+                      ),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name.isEmpty ? 'Chưa cập nhật' : name,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins-Medium',
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff1A2530),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            const Text(
+                              'Tên người nhận',
+                              style: TextStyle(
+                                fontFamily: 'Poppins-Medium',
+                                fontSize: 12,
+                                color: Color(0xff707BB1),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: screenwidth * 0.01),
+                      IconButton(
+                          onPressed: () {
+                            namecontroller.text = name;
+                            showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    // ignore: sized_box_for_whitespace
+                                    content: Container(
+                                        height: 196,
+                                        width: 335,
+                                        child: Column(
+                                          children: [
+                                            const Text(
+                                              'Nhập tên người nhận',
+                                              style: TextStyle(
+                                                fontFamily: 'Raleway-Bold',
+                                                fontSize: 16,
+                                                color: Color(
+                                                  0xff2B2B2B,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              height: 20,
+                                            ),
+                                            TextFormField(
+                                              controller: namecontroller,
+                                              decoration: InputDecoration(
+                                                  hintText: 'Nhập tên người nhận',
+                                                  hintStyle:
+                                                      TextStyling.hinttext,
+                                                  filled: true,
+                                                  fillColor:
+                                                      const Color(0xffF7F7F9),
+                                                  border: OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12))),
+                                            ),
+                                            const SizedBox(
+                                              height: 20,
+                                            ),
+                                            InkWell(
+                                              onTap: () {
+                                                utils.showloading(true);
+                                                db
+                                                    .doc(auth.currentUser!.uid)
+                                                    .update({
+                                                  'Full name': namecontroller.text
+                                                      .toString()
+                                                }).then((value) {
+                                                  utils.showloading(false);
+                                                  GeneralUtils()
+                                                      .showsuccessflushbar(
+                                                          'Tên đã được cập nhật',
+                                                          context);
+                                                  fetchdata();
+                                                }).onError((error, stackTrace) {
+                                                  utils.showloading(false);
+                                                  GeneralUtils()
+                                                      .showerrorflushbar(
+                                                          error.toString(),
+                                                          context);
+                                                });
+                                                Navigator.pop(context);
+                                              },
+                                              child: Container(
+                                                height: 40,
+                                                width: 130,
+                                                decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: AppColor
+                                                        .backgroundColor),
+                                                child: utils.load
+                                                    ? const Center(
+                                                        child:
+                                                            CircularProgressIndicator())
+                                                    : const Center(
+                                                        child: Text(
+                                                          'Xác nhận',
+                                                          style: TextStyle(
+                                                              fontFamily:
+                                                                  'Raleway-Bold',
+                                                              fontSize: 12,
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                      ),
+                                              ),
+                                            )
+                                          ],
+                                        )),
+                                  );
+                                });
+                          },
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: Color(0xff707BB1),
+                            size: 20,
+                          ))
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
                   Row(
                     children: [
                       const SizedBox(
@@ -508,11 +680,9 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                                             if (tempAddress != null) {
                                               utils.showloading(true);
                                               
-                                              // Prepare update data with structured address
                                               final updateData = <String, dynamic>{};
                                               final addressMap = tempAddress!.toMap();
                                               updateData.addAll(addressMap);
-                                              // Also keep backward compatibility with 'address' field
                                               updateData['address'] = tempAddress!.fullAddressString;
                                               
                                               db
@@ -620,110 +790,149 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                     ],
                   ),
                   Spacer(),
-                  cart.showTotalAmountWidget(
-                    cartTotalAmountWidgetBuilder: (totalAmount) => Visibility(
-                      visible: totalAmount == 0.0 ? false : true,
-                      child: Container(
-                        height: 250,
-                        width: double.infinity,
-                        color: Colors.white,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  'Thành tiền',
-                                  style: TextStyle(
-                                    fontFamily: 'Raleway-SemiBold',
-                                    color: Color(0xff707B81),
-                                    fontSize: 16,
+                  Builder(
+                    builder: (context) {
+                      final displayTotal = _selectedItems != null 
+                          ? _selectedTotalPrice 
+                          : cart.calculateTotalPrice();
+                      final displayCount = _selectedItems?.length ?? 
+                          (cart.getCartData()['cartItems'] as List? ?? []).length;
+                      
+                      return Visibility(
+                        visible: displayTotal > 0.0,
+                        child: Container(
+                          height: _selectedItems != null ? 280 : 250,
+                          width: double.infinity,
+                          color: Colors.white,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_selectedItems != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 15,
+                                    right: 15,
+                                    top: 15,
+                                    bottom: 10,
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade50,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.shopping_cart_checkout,
+                                          color: AppColor.backgroundColor,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Đang thanh toán $displayCount sản phẩm đã chọn',
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins-Medium',
+                                            fontSize: 12,
+                                            color: AppColor.backgroundColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                                Spacer(),
-                                Text(
-                                  Formatter.formatCurrency(
-                                      cart.calculateTotalPrice().toInt()),
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins-Medium',
-                                    color: Color(0xff1A2530),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          'Thành tiền',
+                                          style: TextStyle(
+                                            fontFamily: 'Raleway-SemiBold',
+                                            color: Color(0xff707B81),
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Spacer(),
+                                        Text(
+                                          Formatter.formatCurrency(displayTotal.toInt()),
+                                          style: const TextStyle(
+                                            fontFamily: 'Poppins-Medium',
+                                            color: Color(0xff1A2530),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Giảm giá',
+                                          style: TextStyle(
+                                            fontFamily: 'Raleway-SemiBold',
+                                            color: Color(0xff707B81),
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Spacer(),
+                                        const Text(
+                                          '0',
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins-Medium',
+                                            color: Color(0xff1A2530),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    const Divider(color: Colors.black),
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          'Tổng cộng',
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins-Medium',
+                                            color: Color(0xff1A2530),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Spacer(),
+                                        Text(
+                                          Formatter.formatCurrency(displayTotal.toInt()),
+                                          style: const TextStyle(
+                                            fontFamily: 'Poppins-Medium',
+                                            color: Color(0xff1A2530),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 15),
+                                    RoundButtonTwo(
+                                      onpress: () async {
+                                        await placeOrder();
+                                      },
+                                      title: 'Thanh toán',
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Giảm giá',
-                                  style: TextStyle(
-                                    fontFamily: 'Raleway-SemiBold',
-                                    color: Color(0xff707B81),
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Spacer(),
-                                const Text(
-                                  '0',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins-Medium',
-                                    color: Color(0xff1A2530),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            const Divider(
-                              color: Colors.black,
-                            ),
-                            Row(
-                              children: [
-                                const Text(
-                                  'Tổng cộng',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins-Medium',
-                                    color: Color(0xff1A2530),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Spacer(),
-                                Text(
-                                  Formatter.formatCurrency(
-                                      cart.calculateTotalPrice().toInt()),
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins-Medium',
-                                    color: Color(0xff1A2530),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 15,
-                            ),
-                            RoundButtonTwo(
-                              onpress: () async {
-                                await placeOrder();
-                              },
-                              title: 'Thanh toán',
-                            )
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   )
                 ],
               ),
@@ -738,30 +947,73 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
     final orderDb = FirebaseFirestore.instance.collection('Orders');
 
     try {
+      if (_selectedItems != null && _selectedItems!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng chọn ít nhất một sản phẩm để thanh toán!')),
+        );
+        return;
+      }
+
+      final itemsToOrder = _selectedItems ?? 
+          List<PersistentShoppingCartItem>.from(
+            cart.getCartData()['cartItems'] ?? []
+          );
+      
+      for (var item in itemsToOrder) {
+        if (item.quantity <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sản phẩm "${item.productName}" có số lượng không hợp lệ!')),
+          );
+          return;
+        }
+        
+        if (item.productDetails == null || 
+            item.productDetails!['size'] == null || 
+            item.productDetails!['color'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sản phẩm "${item.productName}" thiếu thông tin size hoặc color!')),
+          );
+          return;
+        }
+        
+        if (item.unitPrice <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sản phẩm "${item.productName}" có giá không hợp lệ!')),
+          );
+          return;
+        }
+      }
+
       String orderId = DateTime.now().millisecondsSinceEpoch.toString();
 
-      Map<String, dynamic> cartData = cart.getCartData();
-      List<PersistentShoppingCartItem> cartItems =
-          List<PersistentShoppingCartItem>.from(cartData['cartItems'] ?? []);
-
       List<Map<String, dynamic>> items =
-          cartItems.map((item) => item.toJson()).toList();
+          itemsToOrder.map((item) => item.toJson()).toList();
+      
+      final totalPrice = _selectedItems != null 
+          ? _selectedTotalPrice 
+          : cart.calculateTotalPrice();
 
       await orderDb.doc(orderId).set({
         'orderId': orderId,
         'userId': auth.currentUser!.uid,
+        'name': name,
         'email': email,
         'phone': phone,
         'address': address,
-        // Also save structured address if available
         if (_currentAddress != null) ..._currentAddress!.toMap(),
-        'totalPrice': cartData['totalPrice'] ?? 0,
+        'totalPrice': totalPrice,
         'items': items,
         'status': 'pending',
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      cart.clearCart();
+      if (_selectedItems != null) {
+        for (var item in _selectedItems!) {
+          cart.removeFromCart(item.productId);
+        }
+      } else {
+        cart.clearCart();
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Đơn hàng đã được đặt thành công!')),
@@ -769,9 +1021,18 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
 
       Navigator.pushNamed(context, RouteNames.navbarscreen);
     } catch (e) {
+      debugPrint('Error placing order: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Có lỗi xảy ra, vui lòng thử lại!')),
+        SnackBar(content: Text('Có lỗi xảy ra: ${e.toString()}')),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    namecontroller.dispose();
+    phonecontroller.dispose();
+    emailcontroller.dispose();
+    super.dispose();
   }
 }

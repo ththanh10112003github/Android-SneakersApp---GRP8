@@ -159,10 +159,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
             );
           }
 
-          // Filter orders by selected status and sort by timestamp
           final allOrders = snapshot.data!.docs;
           
-          // Sort by timestamp (descending - newest first)
           final sortedOrders = List.from(allOrders);
           sortedOrders.sort((a, b) {
             final aData = a.data() as Map<String, dynamic>;
@@ -174,10 +172,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
             if (aTimestamp == null) return 1;
             if (bTimestamp == null) return -1;
             
-            return bTimestamp.compareTo(aTimestamp); // Descending order
+            return bTimestamp.compareTo(aTimestamp);
           });
           
-          // Filter by status
           final filteredOrders = _selectedStatus == null
               ? sortedOrders
               : sortedOrders.where((doc) {
@@ -215,7 +212,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
             itemBuilder: (context, index) {
               final orderDoc = filteredOrders[index];
               final order = orderDoc.data() as Map<String, dynamic>;
-              final orderId = orderDoc.id; // Lấy document ID từ Firestore
+              final orderId = order['orderId']?.toString() ?? orderDoc.id;
               final items = order['items'] as List<dynamic>;
               final status = order['status'] ?? 'pending';
               final statusColor = _getStatusColor(status);
@@ -293,8 +290,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                       ),
                     ),
                     children: [
-                      const Divider(height: 1),
-                      // Button xem chi tiết
+                      const Divider(height: 1                      ),
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -337,7 +333,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                       ),
                       if (status == 'pending' || status == 'processing')
                         const Divider(height: 1),
-                      // Button hủy đơn hàng (chỉ hiển thị nếu status là pending hoặc processing)
                       if (status == 'pending' || status == 'processing')
                         Padding(
                           padding: const EdgeInsets.symmetric(
@@ -453,7 +448,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
     );
   }
 
-  /// Hàm lấy màu sắc tương ứng với trạng thái đơn hàng
   Color _getStatusColor(String status) {
     switch (status) {
       case 'pending':
@@ -471,9 +465,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
     }
   }
 
-  /// Hàm hủy đơn hàng
   Future<void> _cancelOrder(String orderId, BuildContext context) async {
-    // Hiển thị dialog xác nhận
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -525,12 +517,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
 
     if (confirmed != true) return;
 
-    // Hiển thị loading
     final utilsProvider = Provider.of<GeneralUtils>(context, listen: false);
     utilsProvider.showloading(true);
 
     try {
-      // Cập nhật status đơn hàng thành 'cancelled'
       await FirebaseFirestore.instance
           .collection('Orders')
           .doc(orderId)

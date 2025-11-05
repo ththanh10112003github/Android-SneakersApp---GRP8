@@ -1,22 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Utility functions for chat context building
 class ChatUtils {
-  /// Build context string về orders của user
   static Future<String> buildOrdersContext(String userId) async {
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('Orders')
           .where('userId', isEqualTo: userId)
-          .orderBy('orderDate', descending: true)
-          .limit(5)
+          .limit(20)
           .get();
+      
+      final tempDocs = snapshot.docs.toList();
+      tempDocs.sort((a, b) {
+        final aData = a.data() as Map<String, dynamic>;
+        final bData = b.data() as Map<String, dynamic>;
+        final aTimestamp = aData['timestamp'] ?? aData['orderDate'];
+        final bTimestamp = bData['timestamp'] ?? bData['orderDate'];
+        if (aTimestamp == null && bTimestamp == null) return 0;
+        if (aTimestamp == null) return 1;
+        if (bTimestamp == null) return -1;
+        if (aTimestamp is Timestamp && bTimestamp is Timestamp) {
+          return bTimestamp.compareTo(aTimestamp);
+        }
+        return 0;
+      });
+      final docs = tempDocs.take(5).toList();
 
-      if (snapshot.docs.isEmpty) {
+      if (docs.isEmpty) {
         return 'Bạn chưa có đơn hàng nào.';
       }
 
-      final ordersList = snapshot.docs.map((doc) {
+      final ordersList = docs.map((doc) {
         final data = doc.data();
         final items = data['items'] as List?;
         final itemNames = items?.map((item) => item['productName'] ?? 'N/A').join(', ') ?? 'N/A';
@@ -36,7 +49,6 @@ class ChatUtils {
     }
   }
 
-  /// Build context string về user profile
   static Future<String> buildUserProfileContext(String userId) async {
     try {
       final doc = await FirebaseFirestore.instance
@@ -60,7 +72,6 @@ Thông tin khách hàng:
     }
   }
 
-  /// Extract structured data từ conversation để tạo ticket
   static Map<String, String> extractTicketDataFromConversation(
     String conversation,
     String? selectedOrderId,
@@ -74,7 +85,6 @@ Thông tin khách hàng:
 
     final lowerConversation = conversation.toLowerCase();
     
-    // Phát hiện issue type từ conversation
     if (lowerConversation.contains('order') || 
         lowerConversation.contains('đơn hàng') ||
         lowerConversation.contains('parcel') ||

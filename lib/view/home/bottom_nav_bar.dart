@@ -141,34 +141,69 @@ class _BottomNavigationBarScreenState extends State<BottomNavigationBarScreen> {
                             children: [
                               userData['image'] == null || userData['image'].toString().isEmpty
                                   ? CircleAvatar(
-                                      radius: 96,
-                                      backgroundColor: Colors.transparent,
+                                      radius: 45,
+                                      backgroundColor: Colors.white.withOpacity(0.2),
                                       child: ClipOval(
                                         child: SvgPicture.asset(
                                           'images/default_profile.svg',
                                           fit: BoxFit.cover,
-                                          width: 192,
-                                          height: 192,
+                                          width: 90,
+                                          height: 90,
                                         ),
                                       ),
                                     )
                                   : CircleAvatar(
-                                      backgroundImage:
-                                          NetworkImage(userData['image']),
-                                      radius: 96,
+                                      radius: 45,
+                                      backgroundColor: Colors.white.withOpacity(0.2),
+                                      child: ClipOval(
+                                        child: Image.network(
+                                          userData['image'],
+                                          width: 90,
+                                          height: 90,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return SvgPicture.asset(
+                                              'images/default_profile.svg',
+                                              fit: BoxFit.cover,
+                                              width: 90,
+                                              height: 90,
+                                            );
+                                          },
+                                          loadingBuilder: (context, child, loadingProgress) {
+                                            if (loadingProgress == null) return child;
+                                            return const Center(
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
                                     ),
                               const SizedBox(
                                 height: 20,
                               ),
                               userData['Full name'] == null
                                   ? Container()
-                                  : Text(
-                                      userData['Full name'].toString(),
-                                      style: const TextStyle(
-                                          fontFamily: 'Raleway-Medium',
-                                          fontSize: 20,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold),
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          userData['Full name'].toString(),
+                                          style: const TextStyle(
+                                              fontFamily: 'Raleway-Medium',
+                                              fontSize: 20,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        SvgPicture.asset(
+                                          'images/another/verified-badge-gold.svg',
+                                          width: 20,
+                                          height: 20,
+                                        ),
+                                      ],
                                     )
                             ],
                           ),

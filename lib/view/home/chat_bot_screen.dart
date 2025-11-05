@@ -2,9 +2,19 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:ecommerce_app/services/gemini_service.dart';
 import 'package:ecommerce_app/utils/chat_utils.dart';
 import 'package:ecommerce_app/utils/gemini_config.dart';
+import 'package:ecommerce_app/utils/formatter.dart';
+import 'package:ecommerce_app/model/chat_message.dart';
+import 'package:ecommerce_app/model/product_selection_state.dart';
+import 'package:ecommerce_app/model/checkout_form_state.dart';
+import 'package:ecommerce_app/view/home/checkout_form_widget.dart';
+import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
+import 'package:ecommerce_app/respository/components/address_picker.dart';
+import 'package:ecommerce_app/respository/components/route_names.dart';
+import 'package:persistent_shopping_cart/model/cart_model.dart';
 
 const botWelcome =
     "Xin chào! Chào mừng đến với Dịch vụ Hỗ trợ Khách hàng. Vui lòng cung cấp thông tin về vấn đề của bạn.";
@@ -57,22 +67,22 @@ class Message {
 enum ChatMode { ai, form }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // Chat mode
   ChatMode _chatMode = ChatMode.ai;
   
-  // Form mode variables
   int step = 0;
   String? selectedMain;
   String? selectedSub;
   String? description;
   Order? selectedOrder;
   
-  // AI mode variables
   final GeminiService _geminiService = GeminiService();
   final TextEditingController _aiMessageController = TextEditingController();
   bool _isLoadingAIResponse = false;
+  ProductSelectionState? _productSelection;
+  CheckoutFormState? _checkoutState;
   
-  // Common variables
+  final Set<String> _chatbotCartProductIds = <String>{};
+  
   List<Message> messages = [];
   final TextEditingController _descCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -85,7 +95,6 @@ class _ChatScreenState extends State<ChatScreen> {
   
   void _initializeChat() {
     if (_chatMode == ChatMode.ai) {
-      // Check API key configuration
       final isConfigured = GeminiConfig.isConfigured;
       final hasModel = _geminiService.isAvailable;
       
@@ -148,23 +157,45 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
   
-  // AI Chat Methods
   Future<void> _sendAIMessage() async {
     final userMessage = _aiMessageController.text.trim();
     if (userMessage.isEmpty || _isLoadingAIResponse) return;
     
-    // Add user message
+    if (_productSelection != null) {
+      if (_productSelection!.isReadyToConfirm) {
+        final lowerMessage = userMessage.toLowerCase().trim();
+        if (lowerMessage.contains('có') || lowerMessage.contains('yes') || 
+            lowerMessage.contains('đồng ý') || lowerMessage.contains('ok') ||
+            lowerMessage.contains('thêm') || lowerMessage.contains('mua')) {
+          addUserMessage(userMessage);
+          _addProductToCartFromSelection();
+        } else if (lowerMessage.contains('không') || lowerMessage.contains('no') || 
+                   lowerMessage.contains('hủy')) {
+          addUserMessage(userMessage);
+          addBotMessage('Đã hủy việc thêm sản phẩm vào giỏ hàng.');
+          setState(() {
+            _productSelection = null;
+          });
+        } else {
+          addUserMessage(userMessage);
+          addBotMessage('Vui lòng trả lời "có" hoặc "không" để xác nhận thêm sản phẩm vào giỏ hàng.');
+        }
+        return;
+      }
+      
+      _handleProductSelectionResponse(userMessage);
+      return;
+    }
+    
     addUserMessage(userMessage);
     _aiMessageController.clear();
     _isLoadingAIResponse = true;
     
     try {
-      // Build conversation history for Gemini (last 10 messages)
       final recentMessages = messages.length > 10 
           ? messages.sublist(messages.length - 10)
           : messages;
       
-      // Convert Message to ChatMessage for Gemini service
       final chatHistory = recentMessages
           .map((msg) => ChatMessage(
                 text: msg.text,
@@ -172,16 +203,21 @@ class _ChatScreenState extends State<ChatScreen> {
               ))
           .toList();
       
-      // Send to Gemini
       final aiResponse = await _geminiService.sendMessage(userMessage, chatHistory);
       
       setState(() {
         _isLoadingAIResponse = false;
-        addBotMessage(aiResponse);
         
-        // Check if AI suggests creating ticket
-        if (_geminiService.shouldCreateTicket(aiResponse)) {
-          _showCreateTicketDialog(userMessage);
+        if (aiResponse.startsWith('CHECKOUT_FORM:')) {
+          _handleCheckoutForm(aiResponse);
+        } else if (aiResponse.startsWith('PRODUCT_SELECTION:')) {
+          _handleProductSelection(aiResponse);
+        } else {
+          addBotMessage(aiResponse);
+          
+          if (_geminiService.shouldCreateTicket(aiResponse)) {
+            _showCreateTicketDialog(userMessage);
+          }
         }
       });
     } catch (e) {
@@ -189,6 +225,400 @@ class _ChatScreenState extends State<ChatScreen> {
         _isLoadingAIResponse = false;
         addBotMessage('Xin lỗi, đã xảy ra lỗi: $e');
       });
+    }
+  }
+  
+  void _handleProductSelection(String response) {
+    if (!response.startsWith('PRODUCT_SELECTION:')) return;
+    
+    final withoutPrefix = response.substring('PRODUCT_SELECTION:'.length);
+    
+    final lastColonIndex = withoutPrefix.lastIndexOf(':');
+    if (lastColonIndex == -1) return;
+    
+    final priceStr = withoutPrefix.substring(lastColonIndex + 1);
+    final price = double.tryParse(priceStr) ?? 0.0;
+    
+    final remaining = withoutPrefix.substring(0, lastColonIndex);
+    
+    final firstColonIndex = remaining.indexOf(':');
+    if (firstColonIndex == -1) return;
+    
+    final productId = remaining.substring(0, firstColonIndex);
+    
+    final nameAndImage = remaining.substring(firstColonIndex + 1);
+    
+    final secondColonIndex = nameAndImage.indexOf(':');
+    if (secondColonIndex == -1) return;
+    
+    final name = nameAndImage.substring(0, secondColonIndex);
+    final imageLink = nameAndImage.substring(secondColonIndex + 1);
+    
+    setState(() {
+      _productSelection = ProductSelectionState(
+        productId: productId,
+        productName: name,
+        imageLink: imageLink,
+        price: price,
+        selectedSize: null,
+        selectedColor: null,
+        isWaitingForSize: true,
+        isWaitingForColor: false,
+        isReadyToConfirm: false,
+      );
+    });
+    
+    addBotMessage('Bạn muốn chọn size nào? (${ProductSizes.available.join(', ')})');
+  }
+  
+  void _handleCheckoutForm(String response) {
+    if (!response.startsWith('CHECKOUT_FORM:')) return;
+    
+    final withoutPrefix = response.substring('CHECKOUT_FORM:'.length);
+    final parts = withoutPrefix.split('|');
+    
+    if (parts.length < 5) {
+      addBotMessage('❌ Lỗi: Không thể parse thông tin thanh toán. Vui lòng thử lại.');
+      return;
+    }
+    
+    final userName = parts[0];
+    final userEmail = parts[1];
+    final userPhone = parts[2];
+    final userAddress = parts[3].replaceAll('||', '|').replaceAll('::', ':');
+    final totalPrice = double.tryParse(parts[4]) ?? 0.0;
+    
+    final cart = PersistentShoppingCart();
+    final cartData = cart.getCartData();
+    final cartItems = cartData['cartItems'] as List? ?? [];
+    
+    List<Map<String, dynamic>> itemsList = [];
+    for (var item in cartItems) {
+      String? productId;
+      
+      if (item is PersistentShoppingCartItem) {
+        productId = item.productId;
+      } else if (item is Map) {
+        productId = item['productId']?.toString();
+      }
+      
+      if (productId != null && _chatbotCartProductIds.contains(productId)) {
+        if (item is PersistentShoppingCartItem) {
+          itemsList.add(item.toJson());
+        } else if (item is Map) {
+          itemsList.add(Map<String, dynamic>.from(item));
+        }
+      }
+    }
+    
+    if (itemsList.isEmpty) {
+      addBotMessage('❌ Không tìm thấy sản phẩm nào trong giỏ hàng được đặt mua qua chatbot. Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.');
+      return;
+    }
+    
+    double calculatedTotal = 0.0;
+    for (var itemJson in itemsList) {
+      final unitPrice = (itemJson['unitPrice'] as num?)?.toDouble() ?? 0.0;
+      final quantity = (itemJson['quantity'] as num?)?.toInt() ?? 0;
+      calculatedTotal += unitPrice * quantity;
+    }
+    
+      final finalTotalPrice = calculatedTotal > 0 ? calculatedTotal : totalPrice;
+      
+      FirebaseFirestore.instance
+        .collection('User Data')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .get()
+        .then((userDoc) {
+      final userData = userDoc.data() ?? {};
+      FullAddress? structuredAddress;
+      
+      if (userData['provinceCode'] != null || userData['provinceName'] != null) {
+        structuredAddress = FullAddress.fromMap(userData);
+      } else if (userData['address'] != null && userData['address'].toString().isNotEmpty) {
+        structuredAddress = FullAddress.fromString(userData['address'].toString());
+      }
+      
+      setState(() {
+        _checkoutState = CheckoutFormState(
+          name: userName,
+          email: userEmail,
+          phone: userPhone,
+          address: userAddress,
+          structuredAddress: structuredAddress,
+          totalPrice: finalTotalPrice,
+          items: itemsList,
+          isReadyToConfirm: true,
+        );
+      });
+      
+      addBotMessage('Vui lòng kiểm tra và xác nhận thông tin thanh toán bên dưới:');
+    });
+  }
+  
+  void _confirmCheckout(CheckoutFormState checkoutState) {
+    _placeOrderFromChat(checkoutState);
+  }
+  
+  String _buildOrderDetailsMessage(String orderId, CheckoutFormState checkoutState) {
+    final buffer = StringBuffer();
+    
+    buffer.writeln('✅ **Đơn hàng đã được đặt thành công!**\n');
+    
+    buffer.writeln('📦 **Mã đơn hàng:** $orderId');
+    buffer.writeln('📊 **Trạng thái:** Chờ xác nhận');
+    buffer.writeln('💰 **Tổng tiền:** ${Formatter.formatCurrency(checkoutState.totalPrice.toInt())}\n');
+    
+    buffer.writeln('🛍️ **Danh sách sản phẩm:**');
+    for (int i = 0; i < checkoutState.items.length; i++) {
+      final item = checkoutState.items[i];
+      final productName = item['productName']?.toString() ?? 'N/A';
+      final quantity = item['quantity'] ?? 1;
+      final unitPrice = (item['unitPrice'] as num?)?.toDouble() ?? 0.0;
+      final size = item['productDetails']?['size']?.toString() ?? 'N/A';
+      final color = item['productDetails']?['color']?.toString() ?? 'N/A';
+      final itemTotal = unitPrice * (quantity as num).toInt();
+      
+      buffer.writeln('${i + 1}. $productName');
+      buffer.writeln('   - Size: $size | Màu: $color');
+      buffer.writeln('   - Số lượng: $quantity');
+      buffer.writeln('   - Đơn giá: ${Formatter.formatCurrency(unitPrice.toInt())}');
+      buffer.writeln('   - Thành tiền: ${Formatter.formatCurrency(itemTotal.toInt())}');
+      if (i < checkoutState.items.length - 1) {
+        buffer.writeln('');
+      }
+    }
+    
+    buffer.writeln('\n📧 **Thông tin giao hàng:**');
+    buffer.writeln('   - Người nhận: ${checkoutState.name}');
+    buffer.writeln('   - Số điện thoại: ${checkoutState.phone}');
+    buffer.writeln('   - Email: ${checkoutState.email}');
+    buffer.writeln('   - Địa chỉ: ${checkoutState.address}');
+    
+    buffer.writeln('\n💬 **Lưu ý:** Bạn có thể theo dõi trạng thái đơn hàng trong phần "Đơn hàng" của ứng dụng.');
+    buffer.writeln('\nCảm ơn bạn đã mua sắm! 🎉');
+    
+    return buffer.toString();
+  }
+  
+  Future<void> _placeOrderFromChat(CheckoutFormState checkoutState) async {
+    final orderDb = FirebaseFirestore.instance.collection('Orders');
+    final auth = FirebaseAuth.instance;
+    
+    try {
+      addBotMessage('Đang xử lý đơn hàng...');
+      
+      if (checkoutState.items.isEmpty) {
+        addBotMessage('❌ Không có sản phẩm nào để đặt hàng. Vui lòng thử lại.');
+        return;
+      }
+      
+      for (var itemJson in checkoutState.items) {
+        final quantity = (itemJson['quantity'] as num?)?.toInt() ?? 0;
+        final unitPrice = (itemJson['unitPrice'] as num?)?.toDouble() ?? 0.0;
+        final productName = itemJson['productName']?.toString() ?? 'N/A';
+        final productDetails = itemJson['productDetails'] as Map<String, dynamic>?;
+        
+        if (quantity <= 0) {
+          addBotMessage('❌ Sản phẩm "$productName" có số lượng không hợp lệ!');
+          return;
+        }
+        
+        if (productDetails == null || 
+            productDetails['size'] == null || 
+            productDetails['color'] == null) {
+          addBotMessage('❌ Sản phẩm "$productName" thiếu thông tin size hoặc color!');
+          return;
+        }
+        
+        if (unitPrice <= 0) {
+          addBotMessage('❌ Sản phẩm "$productName" có giá không hợp lệ!');
+          return;
+        }
+      }
+      
+      String orderId = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      final orderData = <String, dynamic>{
+        'orderId': orderId,
+        'userId': auth.currentUser!.uid,
+        'name': checkoutState.name,
+        'email': checkoutState.email,
+        'phone': checkoutState.phone,
+        'address': checkoutState.address,
+        'totalPrice': checkoutState.totalPrice,
+        'items': checkoutState.items,
+        'status': 'pending',
+        'timestamp': FieldValue.serverTimestamp(),
+      };
+      
+      if (checkoutState.structuredAddress != null) {
+        orderData.addAll(checkoutState.structuredAddress!.toMap());
+      }
+      
+      await orderDb.doc(orderId).set(orderData);
+      
+      final cart = PersistentShoppingCart();
+      
+      final orderedProductIds = <String>{};
+      for (var itemJson in checkoutState.items) {
+        final productId = itemJson['productId']?.toString();
+        if (productId != null) {
+          orderedProductIds.add(productId);
+        }
+      }
+      
+      for (var productId in orderedProductIds) {
+        cart.removeFromCart(productId);
+      }
+      
+      setState(() {
+        _chatbotCartProductIds.clear();
+      });
+      
+      final userDataRef = FirebaseFirestore.instance
+          .collection('User Data')
+          .doc(auth.currentUser!.uid);
+      
+      final updateData = <String, dynamic>{};
+      if (checkoutState.name.isNotEmpty) {
+        updateData['Full name'] = checkoutState.name;
+      }
+      if (checkoutState.email.isNotEmpty) {
+        updateData['Email'] = checkoutState.email;
+      }
+      if (checkoutState.phone.isNotEmpty) {
+        updateData['phone'] = checkoutState.phone;
+      }
+      if (checkoutState.structuredAddress != null) {
+        updateData.addAll(checkoutState.structuredAddress!.toMap());
+        updateData['address'] = checkoutState.structuredAddress!.fullAddressString;
+      } else if (checkoutState.address.isNotEmpty) {
+        updateData['address'] = checkoutState.address;
+      }
+      
+      if (updateData.isNotEmpty) {
+        await userDataRef.update(updateData);
+      }
+      
+      setState(() {
+        _checkoutState = null;
+      });
+      
+      final orderDetails = _buildOrderDetailsMessage(orderId, checkoutState);
+      addBotMessage(orderDetails);
+      
+    } catch (e) {
+      addBotMessage('❌ Có lỗi xảy ra khi đặt hàng: $e\nVui lòng thử lại hoặc liên hệ hỗ trợ.');
+    }
+  }
+  
+  void _handleProductSelectionResponse(String userMessage) {
+    final lowerMessage = userMessage.toLowerCase().trim();
+    
+    if (_productSelection!.isWaitingForSize) {
+      String? selectedSize;
+      for (var size in ProductSizes.available) {
+        if (lowerMessage.contains(size)) {
+          selectedSize = size;
+          break;
+        }
+      }
+      
+      if (selectedSize != null) {
+        setState(() {
+          _productSelection = _productSelection!.copyWith(
+            selectedSize: selectedSize,
+            isWaitingForSize: false,
+            isWaitingForColor: true,
+          );
+        });
+        addUserMessage(userMessage);
+        addBotMessage('Bạn muốn chọn màu nào? (${ProductColors.available.map((c) => c['name']).join(', ')})');
+      } else {
+        addUserMessage(userMessage);
+        addBotMessage('Vui lòng chọn size từ danh sách: ${ProductSizes.available.join(', ')}');
+      }
+    }
+    else if (_productSelection!.isWaitingForColor) {
+      String? selectedColor;
+      for (var color in ProductColors.available) {
+        final colorName = color['name'].toString().toLowerCase();
+        if (lowerMessage.contains(colorName)) {
+          selectedColor = color['name'] as String;
+          break;
+        }
+      }
+      
+      if (selectedColor != null) {
+        setState(() {
+          _productSelection = _productSelection!.copyWith(
+            selectedColor: selectedColor,
+            isWaitingForColor: false,
+            isReadyToConfirm: true,
+          );
+        });
+        addUserMessage(userMessage);
+        _showProductConfirmation();
+      } else {
+        addUserMessage(userMessage);
+        addBotMessage('Vui lòng chọn màu từ danh sách: ${ProductColors.available.map((c) => c['name']).join(', ')}');
+      }
+    }
+  }
+  
+  void _showProductConfirmation() {
+    if (_productSelection == null) return;
+    
+    final priceFormatted = _productSelection!.price != null 
+        ? Formatter.formatCurrency(_productSelection!.price!.toInt())
+        : 'N/A';
+    
+    final confirmationText = '''
+**Đã chọn sản phẩm:**
+
+**Tên sản phẩm:** ${_productSelection!.productName}
+**Size:** ${_productSelection!.selectedSize}
+**Màu:** ${_productSelection!.selectedColor}
+**Giá:** $priceFormatted
+
+Bạn có muốn thanh toán luôn cho sản phẩm này không? Tôi sẽ giúp bạn kiểm tra lại thông tin và tiến hành thanh toán.
+''';
+    
+    addBotMessage(confirmationText);
+  }
+  
+  Future<void> _addProductToCartFromSelection() async {
+    if (_productSelection == null) {
+      return;
+    }
+    
+    if (!_productSelection!.isComplete) {
+      return;
+    }
+    
+    if (!_productSelection!.isReadyToConfirm) {
+      return;
+    }
+    
+    try {
+      final result = await _geminiService.addProductToCart(
+        _productSelection!.productId!,
+        _productSelection!.productName!,
+        _productSelection!.imageLink!,
+        _productSelection!.price!,
+        size: _productSelection!.selectedSize!,
+        color: _productSelection!.selectedColor!,
+      );
+      
+      setState(() {
+        _chatbotCartProductIds.add(_productSelection!.productId!);
+        _productSelection = null;
+      });
+      
+      addBotMessage(result);
+    } catch (e) {
+      addBotMessage('❌ Lỗi khi thêm sản phẩm vào giỏ hàng: $e');
     }
   }
   
@@ -222,13 +652,11 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
     
-    // Extract ticket data from conversation
     final ticketData = ChatUtils.extractTicketDataFromConversation(
       conversation,
       selectedOrder?.id,
     );
     
-    // Get full conversation history as description
     final conversationText = messages
         .where((m) => m.fromUser)
         .map((m) => m.text)
@@ -339,6 +767,8 @@ class _ChatScreenState extends State<ChatScreen> {
       selectedSub = null;
       selectedOrder = null;
       description = null;
+      _productSelection = null;
+      _checkoutState = null;
       _descCtrl.clear();
       _aiMessageController.clear();
       messages.clear();
@@ -359,6 +789,17 @@ class _ChatScreenState extends State<ChatScreen> {
         m.fromUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
     final bg = m.fromUser ? Colors.blue : Colors.grey.shade200;
     final txtColor = m.fromUser ? Colors.white : Colors.black87;
+    
+    final isSizeQuestion = !m.fromUser && 
+        (m.text.toLowerCase().contains('size') || m.text.contains('chọn size')) && 
+        _productSelection?.isWaitingForSize == true;
+    final isColorQuestion = !m.fromUser && 
+        (m.text.toLowerCase().contains('màu') || m.text.toLowerCase().contains('color')) && 
+        _productSelection?.isWaitingForColor == true;
+    final isConfirmationQuestion = !m.fromUser && 
+        (m.text.contains('thêm sản phẩm') || m.text.contains('giỏ hàng')) && 
+        _productSelection?.isReadyToConfirm == true;
+    
     return Column(
       crossAxisAlignment: align,
       children: [
@@ -370,7 +811,160 @@ class _ChatScreenState extends State<ChatScreen> {
             color: bg,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Text(m.text, style: TextStyle(color: txtColor)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MarkdownBody(
+                data: m.text,
+                styleSheet: MarkdownStyleSheet(
+                  p: TextStyle(color: txtColor, fontSize: 14),
+                  strong: TextStyle(
+                    color: txtColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  em: TextStyle(
+                    color: txtColor,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  listBullet: TextStyle(color: txtColor),
+                  listIndent: 24.0,
+                  h1: TextStyle(color: txtColor, fontSize: 20, fontWeight: FontWeight.bold),
+                  h2: TextStyle(color: txtColor, fontSize: 18, fontWeight: FontWeight.bold),
+                  h3: TextStyle(color: txtColor, fontSize: 16, fontWeight: FontWeight.bold),
+                  code: TextStyle(
+                    color: txtColor,
+                    backgroundColor: Colors.transparent,
+                  ),
+                  codeblockDecoration: BoxDecoration(
+                    color: Colors.transparent,
+                  ),
+                ),
+                selectable: true,
+              ),
+              // Hiển thị size picker nếu đang hỏi size
+              if (isSizeQuestion) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: ProductSizes.available.map((size) {
+                    final isSelected = _productSelection?.selectedSize == size;
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          _productSelection = _productSelection!.copyWith(
+                            selectedSize: size,
+                            isWaitingForSize: false,
+                            isWaitingForColor: true,
+                          );
+                        });
+                        addUserMessage(size);
+                        addBotMessage('Bạn muốn chọn màu nào? (${ProductColors.available.map((c) => c['name']).join(', ')})');
+                      },
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected ? Colors.blue : Colors.grey.shade300,
+                          border: Border.all(
+                            color: isSelected ? Colors.blue.shade700 : Colors.grey.shade400,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            size,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+              if (isColorQuestion) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: ProductColors.available.map((colorData) {
+                    final colorName = colorData['name'] as String;
+                    final colorValue = Color(colorData['color'] as int);
+                    final isSelected = _productSelection?.selectedColor == colorName;
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          _productSelection = _productSelection!.copyWith(
+                            selectedColor: colorName,
+                            isWaitingForColor: false,
+                            isReadyToConfirm: true,
+                          );
+                        });
+                        addUserMessage(colorName);
+                        _showProductConfirmation();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? Colors.blue : Colors.grey.shade400,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colorValue,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+              if (isConfirmationQuestion) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        addUserMessage('Có');
+                        _addProductToCartFromSelection();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Có, thêm vào giỏ'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () {
+                        addUserMessage('Không');
+                        addBotMessage('Đã hủy việc thêm sản phẩm vào giỏ hàng.');
+                        setState(() {
+                          _productSelection = null;
+                        });
+                      },
+                      child: const Text('Hủy'),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
         ),
       ],
     );
@@ -708,10 +1302,17 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
-                itemCount: messages.length + 1,
+                itemCount: messages.length + (_checkoutState != null ? 2 : 1),
                 itemBuilder: (context, i) {
                   if (i < messages.length) {
                     return buildMessage(messages[i]);
+                  } else if (i == messages.length && _checkoutState != null) {
+                    return CheckoutFormWidget(
+                      checkoutState: _checkoutState!,
+                      onConfirm: (checkoutState) {
+                        _confirmCheckout(checkoutState);
+                      },
+                    );
                   } else {
                     return SizedBox(height: _chatMode == ChatMode.ai ? 80 : 180);
                   }

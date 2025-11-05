@@ -55,6 +55,7 @@ dependencies:
   intl: ^0.20.2
   google_generative_ai: ^0.4.5
   flutter_svg: ^2.0.9
+  flutter_markdown: ^0.6.18
 # dependency_overrides:
   # stripe_android: "9.5.0+1"
 dev_dependencies:
@@ -112,6 +113,7 @@ flutter:
     - images/email.svg
     - images/edit.png
     - images/emptycart.svg
+    - images/another/verified-badge-gold.svg
   fonts:
     - family: Poppins
       fonts:

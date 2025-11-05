@@ -27,7 +27,6 @@ class UserModel with ChangeNotifier {
       userimage = image;
       notifyListeners();
     } catch (error) {
-      // Handle the error if needed
     }
   }
 }
