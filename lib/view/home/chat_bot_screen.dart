@@ -101,9 +101,9 @@ class _ChatScreenState extends State<ChatScreen> {
       if (isConfigured && hasModel) {
         messages.add(Message(text: aiBotWelcome, fromUser: false));
       } else {
-        String errorMsg = '⚠️ Chế độ AI chưa sẵn sàng.\n';
+        String errorMsg = 'Chế độ AI chưa sẵn sàng.\n';
         if (!isConfigured) {
-          errorMsg += 'API key chưa được cấu hình hoặc là placeholder.\n';
+          errorMsg += 'API key chưa được cấu hình.\n';
           errorMsg += 'Hiện tại: ${GeminiConfig.apiKey.substring(0, 10)}...\n';
         }
         if (!hasModel) {
@@ -278,7 +278,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final parts = withoutPrefix.split('|');
     
     if (parts.length < 5) {
-      addBotMessage('❌ Lỗi: Không thể parse thông tin thanh toán. Vui lòng thử lại.');
+      addBotMessage('Lỗi: Không thể parse thông tin thanh toán. Vui lòng thử lại.');
       return;
     }
     
@@ -312,7 +312,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     
     if (itemsList.isEmpty) {
-      addBotMessage('❌ Không tìm thấy sản phẩm nào trong giỏ hàng được đặt mua qua chatbot. Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.');
+      addBotMessage('Không tìm thấy sản phẩm nào trong giỏ hàng được đặt mua qua chatbot. Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.');
       return;
     }
     
@@ -363,13 +363,11 @@ class _ChatScreenState extends State<ChatScreen> {
   String _buildOrderDetailsMessage(String orderId, CheckoutFormState checkoutState) {
     final buffer = StringBuffer();
     
-    buffer.writeln('✅ **Đơn hàng đã được đặt thành công!**\n');
+    buffer.writeln('**Đơn hàng đã được đặt thành công!**\n');
+    buffer.writeln('**Trạng thái:** Chờ xác nhận');
+    buffer.writeln('**Tổng tiền:** ${Formatter.formatCurrency(checkoutState.totalPrice.toInt())}\n');
     
-    buffer.writeln('📦 **Mã đơn hàng:** $orderId');
-    buffer.writeln('📊 **Trạng thái:** Chờ xác nhận');
-    buffer.writeln('💰 **Tổng tiền:** ${Formatter.formatCurrency(checkoutState.totalPrice.toInt())}\n');
-    
-    buffer.writeln('🛍️ **Danh sách sản phẩm:**');
+    buffer.writeln('**Danh sách sản phẩm:**');
     for (int i = 0; i < checkoutState.items.length; i++) {
       final item = checkoutState.items[i];
       final productName = item['productName']?.toString() ?? 'N/A';
@@ -389,7 +387,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
     
-    buffer.writeln('\n📧 **Thông tin giao hàng:**');
+    buffer.writeln('\n**Thông tin giao hàng:**');
     buffer.writeln('   - Người nhận: ${checkoutState.name}');
     buffer.writeln('   - Số điện thoại: ${checkoutState.phone}');
     buffer.writeln('   - Email: ${checkoutState.email}');
@@ -409,7 +407,7 @@ class _ChatScreenState extends State<ChatScreen> {
       addBotMessage('Đang xử lý đơn hàng...');
       
       if (checkoutState.items.isEmpty) {
-        addBotMessage('❌ Không có sản phẩm nào để đặt hàng. Vui lòng thử lại.');
+        addBotMessage('Không có sản phẩm nào để đặt hàng. Vui lòng thử lại.');
         return;
       }
       
@@ -420,19 +418,19 @@ class _ChatScreenState extends State<ChatScreen> {
         final productDetails = itemJson['productDetails'] as Map<String, dynamic>?;
         
         if (quantity <= 0) {
-          addBotMessage('❌ Sản phẩm "$productName" có số lượng không hợp lệ!');
+          addBotMessage('Sản phẩm "$productName" có số lượng không hợp lệ!');
           return;
         }
         
         if (productDetails == null || 
             productDetails['size'] == null || 
             productDetails['color'] == null) {
-          addBotMessage('❌ Sản phẩm "$productName" thiếu thông tin size hoặc color!');
+          addBotMessage('Sản phẩm "$productName" thiếu thông tin size hoặc color!');
           return;
         }
         
         if (unitPrice <= 0) {
-          addBotMessage('❌ Sản phẩm "$productName" có giá không hợp lệ!');
+          addBotMessage('Sản phẩm "$productName" có giá không hợp lệ!');
           return;
         }
       }
